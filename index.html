@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>English Master | 隨身字典</title>
+    <style>
+        :root {
+            --primary: #4a90e2; --secondary: #f39c12; --bg: #f8f9fa; --text: #2c3e50;
+            --card-bg: white; --nav-bg: white; --input-border: #eee; --shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        [data-theme="dark"] {
+            --bg: #121212; --text: #e0e0e0; --card-bg: #1e1e1e; --nav-bg: #1e1e1e;
+            --input-border: #333; --shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+        body { 
+            font-family: 'Inter', sans-serif; margin: 0; background-color: var(--bg); color: var(--text);
+            line-height: 1.6; transition: 0.3s; -webkit-tap-highlight-color: transparent;
+        }
+        .navbar {
+            background: var(--nav-bg); padding: 0.8rem 1rem; box-shadow: var(--shadow);
+            position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center;
+        }
+        .navbar h1 { margin: 0; font-size: 1.2rem; color: var(--primary); }
+        .container { max-width: 800px; margin: 1rem auto; padding: 0 1rem; }
+        .search-container { position: relative; margin-bottom: 1rem; }
+        .input-wrapper { position: relative; width: 100%; display: flex; align-items: center; }
+        input {
+            padding: 12px 45px 12px 15px; border: 2px solid var(--input-border); border-radius: 12px;
+            font-size: 1rem; background: var(--card-bg); color: var(--text); width: 100%; box-sizing: border-box;
+        }
+        .btn-clear {
+            position: absolute; right: 12px; width: 26px; height: 26px; background: rgba(0,0,0,0.08);
+            border: none; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; color: var(--text); opacity: 0.5;
+        }
+        .alphabet-nav {
+            display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 1rem; justify-content: center;
+            position: sticky; top: 60px; z-index: 90; background: var(--bg); padding: 8px 0;
+        }
+        .letter-link {
+            width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+            background: var(--card-bg); border-radius: 8px; text-decoration: none; color: var(--text);
+            font-weight: bold; font-size: 0.8rem; box-shadow: var(--shadow);
+        }
+        .letter-link.active { background: var(--primary); color: white; transform: scale(1.1); }
+        .word-card {
+            background: var(--card-bg); padding: 1.2rem; border-radius: 12px;
+            box-shadow: var(--shadow); border-left: 5px solid var(--primary); margin-bottom: 1rem;
+        }
+        .word-header h4 { margin: 0; font-size: 1.3rem; color: var(--primary); }
+        .definition-row {
+            display: flex; gap: 10px; padding: 8px; background: rgba(0,0,0,0.03);
+            border-radius: 8px; margin-top: 8px; align-items: baseline;
+        }
+        [data-theme="dark"] .definition-row { background: rgba(255,255,255,0.05); }
+        .pos-badge { 
+            color: var(--secondary); font-weight: bold; background: rgba(243, 156, 18, 0.15);
+            padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; white-space: nowrap;
+        }
+        .status-tag { font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; font-weight: bold; }
+        .online { background: #e8f5e9; color: #2e7d32; }
+        .offline { background: #ffebee; color: #c62828; }
+        .scroll-top {
+            position: fixed; bottom: 20px; right: 20px; width: 45px; height: 45px;
+            background: var(--primary); color: white; border-radius: 50%;
+            display: none; align-items: center; justify-content: center; font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body data-theme="light">
+
+<nav class="navbar">
+    <h1>English Master 📖</h1>
+    <div style="display:flex; align-items:center; gap:10px;">
+        <span id="statusLabel" class="status-tag online">連線中</span>
+        <button onclick="toggleTheme()" style="background:none; border:1px solid var(--primary); color:var(--primary); border-radius:15px; padding:2px 10px; font-size:0.8rem; cursor:pointer;">主題</button>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="search-container">
+        <div class="input-wrapper">
+            <input type="text" id="searchQuery" placeholder="🔍 搜尋單字或意思..." oninput="updateView()">
+            <button class="btn-clear" onclick="document.getElementById('searchQuery').value=''; updateView();">✕</button>
+        </div>
+    </div>
+
+    <div class="alphabet-nav" id="alphabetNav"></div>
+    <div id="stat-count" style="text-align:right; font-size:0.8rem; opacity:0.6; margin-bottom:0.5rem;">載入中...</div>
+    <div id="displayArea"></div>
+</div>
+
+<div class="scroll-top" id="scrollTopBtn" onclick="window.scrollTo({top:0, behavior:'smooth'})">↑</div>
+
+<script>
+    let allWords = [];
+    let activeLetter = null;
+
+    // 1. 初始化字母導航
+    const nav = document.getElementById('alphabetNav');
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZ#'.split('').forEach(char => {
+        const a = document.createElement('a');
+        a.className = 'letter-link';
+        a.innerText = char;
+        a.onclick = () => {
+            activeLetter = (activeLetter === char) ? null : char;
+            updateView();
+        };
+        nav.appendChild(a);
+    });
+
+    // 2. 核心：讀取資料與快取
+    async function init() {
+        try {
+            // 嘗試從 GitHub 讀取最新的 dictionary.json
+            const res = await fetch('dictionary.json');
+            if (!res.ok) throw new Error();
+            allWords = await res.json();
+            // 存入手機本地快取
+            localStorage.setItem('gh_pages_cache', JSON.stringify(allWords));
+            document.getElementById('statusLabel').innerText = '已更新';
+            document.getElementById('statusLabel').className = 'status-tag online';
+        } catch (e) {
+            // 失敗則讀取快取
+            const cache = localStorage.getItem('gh_pages_cache');
+            if (cache) {
+                allWords = JSON.parse(cache);
+                document.getElementById('statusLabel').innerText = '離線模式';
+                document.getElementById('statusLabel').className = 'status-tag offline';
+            } else {
+                document.getElementById('displayArea').innerHTML = '請先連網以載入單字庫';
+            }
+        }
+        updateView();
+    }
+
+    function updateView() {
+        const query = document.getElementById('searchQuery').value.trim().toLowerCase();
+        let filtered = allWords;
+
+        // 字母篩選
+        if (activeLetter) {
+            filtered = filtered.filter(w => {
+                let char = w.word[0].toUpperCase();
+                if (!/[A-Z]/.test(char)) char = '#';
+                return char === activeLetter;
+            });
+        }
+
+        // 關鍵字篩選
+        if (query) {
+            filtered = filtered.filter(w => 
+                w.word.toLowerCase().includes(query) || 
+                w.definitions.some(d => d.meaning.toLowerCase().includes(query))
+            );
+        }
+
+        render(filtered);
+    }
+
+    function render(words) {
+        const area = document.getElementById('displayArea');
+        area.innerHTML = '';
+        
+        document.querySelectorAll('.letter-link').forEach(l => l.classList.toggle('active', l.innerText === activeLetter));
+        document.getElementById('stat-count').innerText = `${words.length} Vocabularies`;
+
+        words.sort((a,b) => a.word.localeCompare(b.word)).forEach(w => {
+            const card = document.createElement('div');
+            card.className = 'word-card';
+            let defsHtml = '';
+            w.definitions.forEach(d => {
+                defsHtml += `<div class="definition-row"><span class="pos-badge">${d.type}</span><span>${d.meaning}</span></div>`;
+            });
+            card.innerHTML = `<div class="word-header"><h4>${w.word}</h4></div>${defsHtml}`;
+            area.appendChild(card);
+        });
+    }
+
+    function toggleTheme() {
+        const body = document.body;
+        const theme = body.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+        body.setAttribute('data-theme', theme);
+    }
+
+    window.onscroll = () => {
+        document.getElementById('scrollTopBtn').style.display = window.scrollY > 300 ? 'flex' : 'none';
+    };
+
+    init();
+</script>
+</body>
+</html>
