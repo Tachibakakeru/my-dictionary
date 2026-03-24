@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>English Master | 個人英文字典</title>
+    <style>
+        :root {
+            --primary: #4a90e2;
+            --secondary: #f39c12;
+            --danger: #e74c3c;
+            --success: #2ecc71;
+            --bg: #f8f9fa;
+            --text: #2c3e50;
+            --card-bg: white;
+            --nav-bg: white;
+            --input-border: #eee;
+            --shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg: #121212;
+            --text: #e0e0e0;
+            --card-bg: #1e1e1e;
+            --nav-bg: #1e1e1e;
+            --input-border: #333;
+            --shadow: 0 4px 12px rgba(0,0,0,0.5);
+            --secondary: #ffb74d;
+        }
+
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            margin: 0; 
+            background-color: var(--bg); 
+            color: var(--text);
+            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .navbar {
+            background: var(--nav-bg);
+            padding: 0.6rem 1rem;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-left { display: flex; align-items: center; gap: 10px; }
+        .navbar h1 { margin: 0; font-size: 1.2rem; color: var(--primary); cursor: pointer; white-space: nowrap; }
+
+        .btn-back-home {
+            background: none;
+            border: 1.5px solid var(--primary);
+            color: var(--primary);
+            padding: 4px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: bold;
+            display: none;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .container { max-width: 900px; margin: 1.5rem auto; padding: 0 1rem; }
+
+        .theme-toggle {
+            background: none;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            padding: 4px 10px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 1.2rem; }
+
+        .input-wrapper { position: relative; width: 100%; display: flex; align-items: center; }
+
+        input, textarea {
+            padding: 12px 42px 12px 12px;
+            border: 2px solid var(--input-border);
+            border-radius: 10px;
+            font-size: 1rem;
+            background: var(--card-bg);
+            color: var(--text);
+            box-sizing: border-box;
+            width: 100%;
+            transition: border-color 0.2s;
+            appearance: none;
+        }
+        input:focus, textarea:focus { border-color: var(--primary); outline: none; }
+
+        .btn-clear-inner {
+            position: absolute;
+            right: 10px;
+            width: 26px;
+            height: 26px;
+            background: rgba(0,0,0,0.08);
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text);
+            font-size: 12px;
+            opacity: 0.6;
+            padding: 0;
+            z-index: 5;
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1.5fr auto;
+            gap: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .input-grid { grid-template-columns: 1fr; }
+            .btn-add { width: 100%; padding: 14px; margin-top: 5px; }
+            .container { margin: 1rem auto; }
+            .card { padding: 1.2rem; }
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.95rem;
+        }
+
+        .btn-add { background: var(--primary); color: white; }
+        .btn-delete { background: var(--danger); color: white; padding: 8px 14px; font-size: 0.85rem; }
+        .btn-edit { background: var(--secondary); color: white; padding: 8px 14px; font-size: 0.85rem; margin-right: 4px; }
+        .btn-save { background: var(--success); color: white; }
+        .btn-cancel { background: #95a5a6; color: white; }
+
+        .alphabet-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-bottom: 1.2rem;
+            justify-content: center;
+            position: sticky;
+            top: 55px;
+            z-index: 90;
+            background: var(--bg);
+            padding: 8px 0;
+        }
+
+        .letter-link {
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--card-bg);
+            border-radius: 6px;
+            text-decoration: none;
+            color: var(--text);
+            font-weight: bold;
+            box-shadow: var(--shadow);
+            font-size: 0.8rem;
+        }
+
+        .letter-link.active { background: var(--primary); color: white; transform: scale(1.1); }
+
+        .bulk-actions {
+            background: var(--nav-bg);
+            padding: 10px 15px;
+            border-radius: 10px;
+            margin-bottom: 1.2rem;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 115px;
+            z-index: 85;
+            box-shadow: var(--shadow);
+        }
+
+        .bulk-actions.visible { display: flex; }
+
+        .word-list { display: flex; flex-direction: column; gap: 1.2rem; }
+
+        .word-card {
+            background: var(--card-bg);
+            padding: 1.2rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            border-left: 5px solid var(--primary);
+        }
+
+        .word-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 0.8rem;
+        }
+
+        .word-header h4 { margin: 0; font-size: 1.3rem; word-break: break-all; flex: 1; min-width: 180px; }
+
+        .action-btns { display: flex; gap: 4px; }
+
+        .definition-row {
+            display: flex;
+            gap: 10px;
+            padding: 8px;
+            background: rgba(0,0,0,0.03);
+            border-radius: 8px;
+            margin-bottom: 6px;
+            align-items: baseline;
+        }
+
+        [data-theme="dark"] .definition-row { background: rgba(255,255,255,0.05); }
+
+        .pos-badge { 
+            color: var(--secondary); 
+            font-weight: bold; 
+            background: rgba(243, 156, 18, 0.15);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+        }
+
+        .category-menu { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        @media (min-width: 600px) { .category-menu { grid-template-columns: repeat(3, 1fr); } }
+
+        .category-card {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+        }
+        .category-card i { font-size: 2.5rem; margin-bottom: 0.8rem; display: block; }
+        .category-card h3 { margin: 0.5rem 0; font-size: 1.2rem; }
+        .category-card p { margin: 0; font-size: 0.9rem; opacity: 0.7; }
+
+        .view-section { display: none; }
+        .view-section.active { display: block; }
+
+        .scroll-top-btn {
+            position: fixed; bottom: 20px; right: 20px; width: 45px; height: 45px;
+            background: var(--primary); color: white; border-radius: 50%;
+            display: none; align-items: center; justify-content: center;
+            font-size: 1.2rem; cursor: pointer; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body data-theme="light">
+
+<nav class="navbar">
+    <div class="nav-left">
+        <button class="btn-back-home" id="btnBackHome" onclick="showSection('home')">← 返回</button>
+        <h1 onclick="showSection('home')">English Master 📖</h1>
+    </div>
+    <div class="nav-right">
+        <button class="theme-toggle" onclick="toggleTheme()"><span id="themeLabel">🌙</span></button>
+    </div>
+</nav>
+
+<div class="container">
+    <div id="home-section" class="view-section active">
+        <div class="category-menu">
+            <div class="category-card" onclick="showSection('vocabulary')"><i>🔤</i><h3>Vocabulary</h3><p>單字管理</p></div>
+            <div class="category-card" onclick="showSection('phrase')"><i>🗣️</i><h3>Phrase</h3><p>常用片語</p></div>
+            <div class="category-card" onclick="showSection('slang')"><i>🤪</i><h3>Slang</h3><p>俚語與成語</p></div>
+        </div>
+    </div>
+
+    <div id="vocabulary-section" class="view-section">
+        <div class="card" id="addWordCard">
+            <div class="section-title">➕ 新增單字</div>
+            <form onsubmit="event.preventDefault(); addWord();" class="input-grid">
+                <div class="input-wrapper"><input type="text" id="wordInput" placeholder="單字" inputmode="latin"><button type="button" class="btn-clear-inner" onclick="clearInput('wordInput')">✕</button></div>
+                <div class="input-wrapper"><input type="text" id="posInput" placeholder="詞性"><button type="button" class="btn-clear-inner" onclick="clearInput('posInput')">✕</button></div>
+                <div class="input-wrapper"><input type="text" id="meaningInput" placeholder="意思"><button type="button" class="btn-clear-inner" onclick="clearInput('meaningInput')">✕</button></div>
+                <button type="submit" class="btn-add">新增</button>
+            </form>
+        </div>
+
+        <div class="search-container">
+            <div class="input-wrapper">
+                <input type="text" id="searchQuery" class="search-input" placeholder="🔍 搜尋..." oninput="searchWords()" inputmode="search">
+                <button type="button" class="btn-clear-inner" onclick="clearInput('searchQuery'); searchWords();">✕</button>
+            </div>
+        </div>
+
+        <div class="alphabet-nav" id="alphabetNav"></div>
+
+        <div class="bulk-actions" id="bulkActions">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <input type="checkbox" id="selectAll" onchange="toggleSelectAll()" style="width:18px; height:18px;"> 
+                <label for="selectAll" style="font-weight:bold; font-size:0.9rem;">全選</label>
+            </div>
+            <button class="btn-delete" onclick="deleteSelected()" style="padding:6px 12px;">批量刪除</button>
+        </div>
+
+        <div id="loader" style="text-align:center; display:none; padding:2rem;">載入中...</div>
+        <div id="stat-count" style="text-align:right; font-size:0.85rem; opacity:0.6; margin-bottom:0.5rem; font-weight:bold;">0 Vocabularies</div>
+        <div id="displayArea" class="word-list"></div>
+    </div>
+
+    <div id="phrase-section" class="view-section"><div class="card" style="text-align:center; padding:3rem;"><h2>🗣️ Phrase</h2><p>開發中...</p></div></div>
+    <div id="slang-section" class="view-section"><div class="card" style="text-align:center; padding:3rem;"><h2>🤪 Slang</h2><p>開發中...</p></div></div>
+</div>
+
+<div class="scroll-top-btn" id="scrollTopBtn" onclick="window.scrollTo({top:0, behavior:'smooth'})">↑</div>
+
+<script>
+    let currentQuery = '';
+    let activeLetter = null;
+
+    function clearInput(id) {
+        const input = document.getElementById(id);
+        input.value = '';
+        input.focus();
+    }
+
+    function showSection(id) {
+        document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+        document.getElementById(id + '-section').classList.add('active');
+        document.getElementById('btnBackHome').style.display = (id === 'home') ? 'none' : 'flex';
+        if (id === 'vocabulary') updateView();
+        window.scrollTo(0,0);
+    }
+
+    function toggleTheme() {
+        const body = document.body;
+        const theme = body.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+        body.setAttribute('data-theme', theme);
+        document.getElementById('themeLabel').innerText = theme === 'light' ? '🌙' : '☀️';
+    }
+
+    const nav = document.getElementById('alphabetNav');
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZ#'.split('').forEach(char => {
+        const a = document.createElement('a');
+        a.className = 'letter-link';
+        a.innerText = char;
+        a.href = 'javascript:void(0)';
+        a.onclick = () => {
+            if (activeLetter === char) activeLetter = null;
+            else activeLetter = char;
+            updateView();
+        };
+        nav.appendChild(a);
+    });
+
+    async function updateView() {
+        const loader = document.getElementById('loader');
+        const qInput = document.getElementById('searchQuery');
+        if (qInput) currentQuery = qInput.value.trim();
+
+        loader.style.display = 'block';
+        
+        try {
+            let url = '/api/words';
+            if (currentQuery) url = `/api/search?q=${encodeURIComponent(currentQuery)}`;
+            
+            const res = await fetch(url);
+            if (!res.ok) throw new Error("Offline");
+            const words = await res.json();
+            
+            // 連線成功，備份到本地
+            if (!currentQuery && !activeLetter) {
+                localStorage.setItem('offline_vocab_data', JSON.stringify(words));
+            }
+            
+            loader.style.display = 'none';
+            refreshDisplay(words, true);
+        } catch (e) {
+            console.warn("切換至離線模式");
+            loader.style.display = 'none';
+            
+            const cachedData = localStorage.getItem('offline_vocab_data');
+            if (cachedData) {
+                let words = JSON.parse(cachedData);
+                // 離線過濾
+                if (currentQuery) {
+                    const q = currentQuery.toLowerCase();
+                    words = words.filter(w => 
+                        w.word.toLowerCase().includes(q) || 
+                        w.definitions.some(d => d.meaning.toLowerCase().includes(q))
+                    );
+                }
+                refreshDisplay(words, false);
+            } else {
+                document.getElementById('displayArea').innerHTML = `<div style="text-align:center; padding:5rem; opacity:0.5;">離線中且無快取</div>`;
+            }
+        }
+    }
+
+    function searchWords() { updateView(); }
+
+    function refreshDisplay(words, isOnline) {
+        const area = document.getElementById('displayArea');
+        area.innerHTML = '';
+        
+        // 離線隱藏新增功能
+        document.getElementById('addWordCard').style.display = isOnline ? 'block' : 'none';
+
+        document.querySelectorAll('.letter-link').forEach(l => {
+            l.classList.toggle('active', l.innerText === activeLetter);
+        });
+
+        const groups = {};
+        words.forEach(w => {
+            let char = w.word[0].toUpperCase();
+            if (!/[A-Z]/.test(char)) char = '#';
+            if (activeLetter && char !== activeLetter) return;
+            if (!groups[char]) groups[char] = [];
+            groups[char].push(w);
+        });
+
+        let total = 0;
+        Object.keys(groups).sort().forEach(char => {
+            total += groups[char].length;
+            const section = document.createElement('div');
+            section.innerHTML = `<span style="font-size:1.5rem; color:var(--primary); font-weight:bold; display:block; border-bottom:2.5px solid var(--primary); margin:2rem 0 1rem;">${char}</span>`;
+            const list = document.createElement('div');
+            list.className = 'word-list';
+            
+            groups[char].sort((a,b) => a.word.localeCompare(b.word)).forEach((w) => {
+                const card = document.createElement('div');
+                card.className = 'word-card';
+                card.id = `card-${w.word.replace(/\s+/g, '_')}`;
+                
+                let defs = '';
+                w.definitions.forEach(d => {
+                    defs += `<div class="definition-row"><span class="pos-badge">${d.type}</span><span style="font-size:0.95rem;">${d.meaning}</span></div>`;
+                });
+
+                const actionBtns = isOnline ? `
+                    <div class="action-btns">
+                        <button class="btn-edit" onclick="enterEditMode('${encodeURIComponent(w.word)}', ${JSON.stringify(w.definitions).replace(/"/g, '&quot;')})">編輯</button>
+                        <button class="btn-delete" onclick="deleteWord('${w.word}')">刪除</button>
+                    </div>
+                ` : '';
+
+                const checkbox = isOnline ? `<input type="checkbox" class="word-checkbox" data-word="${w.word}" onchange="updateSelection()" style="width:18px; height:18px;">` : '';
+
+                card.innerHTML = `
+                    <div class="word-header">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            ${checkbox}
+                            <h4 style="font-size:1.2rem;">${w.word}</h4>
+                        </div>
+                        ${actionBtns}
+                    </div>
+                    <div>${defs}</div>
+                `;
+                list.appendChild(card);
+            });
+            section.appendChild(list);
+            area.appendChild(section);
+        });
+        
+        document.getElementById('stat-count').innerText = `${total} Vocabularies ${isOnline ? '' : '(離線中)'}`;
+        if (total === 0) area.innerHTML = `<div style="text-align:center; opacity:0.5; padding:4rem;">找不到內容</div>`;
+    }
+
+    function enterEditMode(wordEnc, defs) {
+        const word = decodeURIComponent(wordEnc);
+        const card = document.getElementById(`card-${word.replace(/\s+/g, '_')}`);
+        let html = `
+            <div class="input-wrapper" style="margin-bottom:12px;">
+                <input type="text" class="edit-input" id="ew-${wordEnc}" value="${word}" style="font-weight:bold;">
+                <button type="button" class="btn-clear-inner" onclick="clearInput('ew-${wordEnc}')">✕</button>
+            </div>
+        `;
+        defs.forEach((d, i) => {
+            html += `
+                <div style="background:rgba(0,0,0,0.05); padding:12px; border-radius:10px; margin-bottom:10px;">
+                    <div class="input-wrapper" style="margin-bottom:8px;">
+                        <input type="text" class="edit-input" id="et-${wordEnc}-${i}" value="${d.type}" placeholder="詞性">
+                        <button type="button" class="btn-clear-inner" onclick="clearInput('et-${wordEnc}-${i}')">✕</button>
+                    </div>
+                    <div class="input-wrapper">
+                        <textarea class="edit-input" id="em-${wordEnc}-${i}" placeholder="意思" rows="2">${d.meaning}</textarea>
+                        <button type="button" class="btn-clear-inner" onclick="clearInput('em-${wordEnc}-${i}')">✕</button>
+                    </div>
+                </div>
+            `;
+        });
+        html += `<div style="display:flex; gap:8px;"><button class="btn-save" onclick="saveEdit('${wordEnc}', ${defs.length})">儲存</button> <button class="btn-cancel" onclick="updateView()">取消</button></div>`;
+        card.innerHTML = html;
+    }
+
+    async function saveEdit(oldWordEnc, len) {
+        const newWord = document.getElementById(`ew-${oldWordEnc}`).value.trim();
+        const definitions = [];
+        for(let i=0; i<len; i++) {
+            const type = document.getElementById(`et-${oldWordEnc}-${i}`).value.trim();
+            const meaning = document.getElementById(`em-${oldWordEnc}-${i}`).value.trim();
+            if (type && meaning) definitions.push({type, meaning});
+        }
+        if (!newWord || definitions.length === 0) return alert('內容不能為空');
+        await fetch('/api/words/update', {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({old_word: decodeURIComponent(oldWordEnc), new_word: newWord, definitions})
+        });
+        updateView();
+    }
+
+    async function addWord() {
+        const word = document.getElementById('wordInput').value.trim();
+        const type = document.getElementById('posInput').value.trim();
+        const meaning = document.getElementById('meaningInput').value.trim();
+        if (!word || !meaning) return alert('請輸入內容');
+        const res = await fetch('/api/words', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({word, type, meaning})
+        });
+        const result = await res.json();
+        if (result.status === 'exists') alert(result.message);
+        else {
+            ['wordInput', 'posInput', 'meaningInput'].forEach(id => document.getElementById(id).value = '');
+            updateView();
+        }
+    }
+
+    async function deleteWord(word) {
+        if (confirm(`刪除 '${word}'？`)) {
+            await fetch(`/api/words?word=${encodeURIComponent(word)}`, {method: 'DELETE'});
+            updateView();
+        }
+    }
+
+    function updateSelection() {
+        const selected = document.querySelectorAll('.word-checkbox:checked').length;
+        document.getElementById('bulkActions').classList.toggle('visible', selected > 0);
+    }
+
+    function toggleSelectAll() {
+        const checked = document.getElementById('selectAll').checked;
+        document.querySelectorAll('.word-checkbox').forEach(cb => cb.checked = checked);
+        updateSelection();
+    }
+
+    async function deleteSelected() {
+        const words = Array.from(document.querySelectorAll('.word-checkbox:checked')).map(cb => cb.dataset.word);
+        if (words.length && confirm(`刪除這 ${words.length} 個單字？`)) {
+            await fetch('/api/words/batch', {
+                method: 'DELETE',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({words})
+            });
+            updateView();
+        }
+    }
+
+    window.onscroll = () => {
+        const btn = document.getElementById('scrollTopBtn');
+        btn.style.display = window.scrollY > 300 ? 'flex' : 'none';
+    };
+</script>
+</body>
+</html>
