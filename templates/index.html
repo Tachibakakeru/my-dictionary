@@ -209,6 +209,26 @@
             border-radius: 12px;
             box-shadow: var(--shadow);
             border-left: 5px solid var(--primary);
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+            border-left-width: 5px;
+        }
+
+        .word-card.selected {
+            border: 2px solid var(--primary);
+            border-left-width: 5px;
+            background-color: rgba(74, 144, 226, 0.08);
+        }
+
+        [data-theme="dark"] .word-card.selected {
+            background-color: rgba(74, 144, 226, 0.15);
+        }
+
+        .word-checkbox {
+            width: 20px !important;
+            height: 20px !important;
+            cursor: pointer;
+            accent-color: var(--primary);
         }
 
         .word-header {
