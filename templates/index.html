@@ -201,6 +201,13 @@
 
         .bulk-actions.visible { display: flex; }
 
+        #selected-info {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin-left: 10px;
+        }
+
         .word-list { display: flex; flex-direction: column; gap: 1.2rem; }
 
         .word-card {
@@ -335,9 +342,10 @@
         <div class="alphabet-nav" id="alphabetNav"></div>
 
         <div class="bulk-actions" id="bulkActions">
-            <div style="display:flex; align-items:center; gap:8px;">
-                <input type="checkbox" id="selectAll" onchange="toggleSelectAll()" style="width:18px; height:18px;"> 
-                <label for="selectAll" style="font-weight:bold; font-size:0.9rem;">全選</label>
+            <div style="display:flex; align-items:center;">
+                <input type="checkbox" id="selectAll" onchange="toggleSelectAll()" style="width:20px; height:20px; cursor:pointer; accent-color:var(--primary);"> 
+                <label for="selectAll" style="font-weight:bold; font-size:0.9rem; cursor:pointer; margin-left:5px;">全選</label>
+                <span id="selected-info" style="margin-left:10px; font-size:0.9rem; font-weight:bold; color:var(--primary);"></span>
             </div>
             <button class="btn-delete" onclick="deleteSelected()" style="padding:6px 12px;">批量刪除</button>
         </div>
@@ -584,13 +592,41 @@
     }
 
     function updateSelection() {
-        const selected = document.querySelectorAll('.word-checkbox:checked').length;
-        document.getElementById('bulkActions').classList.toggle('visible', selected > 0);
+        const checkboxes = document.querySelectorAll('.word-checkbox');
+        const selectedCheckboxes = document.querySelectorAll('.word-checkbox:checked');
+        const count = selectedCheckboxes.length;
+        
+        checkboxes.forEach(cb => {
+            const card = cb.closest('.word-card');
+            if (cb.checked) {
+                card.classList.add('selected');
+            } else {
+                card.classList.remove('selected');
+            }
+        });
+
+        const selectAllCb = document.getElementById('selectAll');
+        if (checkboxes.length > 0) {
+            selectAllCb.checked = (count === checkboxes.length);
+        }
+
+        const bulkActions = document.getElementById('bulkActions');
+        const info = document.getElementById('selected-info');
+        
+        if (count > 0) {
+            bulkActions.classList.add('visible');
+            info.innerText = `(已選取 ${count} 個項目)`;
+        } else {
+            bulkActions.classList.remove('visible');
+            info.innerText = '';
+        }
     }
 
     function toggleSelectAll() {
         const checked = document.getElementById('selectAll').checked;
-        document.querySelectorAll('.word-checkbox').forEach(cb => cb.checked = checked);
+        document.querySelectorAll('.word-checkbox').forEach(cb => {
+            cb.checked = checked;
+        });
         updateSelection();
     }
 
