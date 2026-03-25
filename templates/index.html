@@ -136,6 +136,7 @@
             .btn-add { width: 100%; padding: 14px; margin-top: 5px; }
             .container { margin: 1rem auto; }
             .card { padding: 1.2rem; }
+            .alphabet-nav, .bulk-actions { position: static !important; }
         }
 
         button {
@@ -279,7 +280,8 @@
         <h1 onclick="showSection('home')">English Master 📖</h1>
     </div>
     <div class="nav-right">
-        <button class="theme-toggle" onclick="toggleTheme()"><span id="themeLabel">🌙</span></button>
+        <span id="stat-count-nav" class="stat-badge" style="font-size:0.8rem; font-weight:bold; opacity:0.8;">0 Vocab</span>
+        <button class="theme-toggle" onclick="toggleTheme()" style="border-radius:15px; padding:3px 8px; font-size:1rem; display:flex; align-items:center; justify-content:center;"><span id="themeLabel">🌙</span></button>
     </div>
 </nav>
 
@@ -321,7 +323,6 @@
         </div>
 
         <div id="loader" style="text-align:center; display:none; padding:2rem;">載入中...</div>
-        <div id="stat-count" style="text-align:right; font-size:0.85rem; opacity:0.6; margin-bottom:0.5rem; font-weight:bold;">0 Vocabularies</div>
         <div id="displayArea" class="word-list"></div>
     </div>
 
@@ -352,9 +353,19 @@
     function toggleTheme() {
         const body = document.body;
         const theme = body.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-        body.setAttribute('data-theme', theme);
-        document.getElementById('themeLabel').innerText = theme === 'light' ? '🌙' : '☀️';
+        applyTheme(theme);
+        localStorage.setItem('user_theme', theme);
     }
+
+    function applyTheme(theme) {
+        document.body.setAttribute('data-theme', theme);
+        const label = document.getElementById('themeLabel');
+        if (label) label.innerText = theme === 'light' ? '🌙' : '☀️';
+    }
+
+    // 初始化主題
+    const savedTheme = localStorage.getItem('user_theme') || 'light';
+    applyTheme(savedTheme);
 
     const nav = document.getElementById('alphabetNav');
     'ABCDEFGHIJKLMNOPQRSTUVWXYZ#'.split('').forEach(char => {
@@ -479,7 +490,7 @@
             area.appendChild(section);
         });
         
-        document.getElementById('stat-count').innerText = `${total} Vocabularies ${isOnline ? '' : '(離線中)'}`;
+        document.getElementById('stat-count-nav').innerText = `${total} Vocab${isOnline ? '' : ' (Offline)'}`;
         if (total === 0) area.innerHTML = `<div style="text-align:center; opacity:0.5; padding:4rem;">找不到內容</div>`;
     }
 
