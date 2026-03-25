@@ -42,15 +42,22 @@ def save_and_sync(data):
             json.dump(data, f, ensure_ascii=False, indent=4)
         
         # 2. 執行 Git 指令同步到 GitHub
-        # 注意：這要求您的資料夾已經是一個 Git Repository 且已連結遠端
-        print("正在同步到 GitHub...")
-        subprocess.run(["git", "add", "dictionary.json"], check=True)
-        subprocess.run(["git", "commit", "-m", "Auto-update dictionary data"], check=True)
-        subprocess.run(["git", "push", "origin", "main"], check=True)
-        print("同步成功！")
-        return True
+        print(f"正在同步到 GitHub... (目錄: {BASE_DIR})")
+        # 確保在正確的目錄執行
+        subprocess.run(["git", "add", "dictionary.json"], check=True, cwd=BASE_DIR)
+        subprocess.run(["git", "commit", "-m", "Auto-update dictionary data"], check=True, cwd=BASE_DIR)
+        
+        # 使用 subprocess.PIPE 來捕捉錯誤，避免因為沒權限而卡死
+        result = subprocess.run(["git", "push", "origin", "main"], capture_output=True, text=True, cwd=BASE_DIR)
+        
+        if result.returncode == 0:
+            print("同步成功！")
+            return True
+        else:
+            print(f"同步失敗: {result.stderr}")
+            return False
     except Exception as e:
-        print(f"同步失敗: {e}")
+        print(f"程式執行異常: {e}")
         return False
 
 @app.route('/')
