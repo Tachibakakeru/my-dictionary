@@ -78,6 +78,7 @@
             cursor: pointer;
             font-size: 0.8rem;
             font-weight: bold;
+            display: flex; align-items: center; justify-content: center;
         }
 
         .card {
@@ -132,7 +133,7 @@
         }
 
         @media (max-width: 768px) {
-            .input-grid { grid-template-columns: 1fr; }
+            .input-grid { grid-template-columns: 1fr !important; }
             .btn-add { width: 100%; padding: 14px; margin-top: 5px; }
             .container { margin: 1rem auto; }
             .card { padding: 1.2rem; }
@@ -156,134 +157,58 @@
         .btn-cancel { background: #95a5a6; color: white; }
 
         .alphabet-nav {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px;
-            margin-bottom: 1.2rem;
-            justify-content: center;
-            position: sticky;
-            top: 55px;
-            z-index: 90;
-            background: var(--bg);
-            padding: 8px 0;
+            display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 1.2rem; justify-content: center;
+            position: sticky; top: 55px; z-index: 90; background: var(--bg); padding: 8px 0;
         }
 
         .letter-link {
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: var(--card-bg);
-            border-radius: 6px;
-            text-decoration: none;
-            color: var(--text);
-            font-weight: bold;
-            box-shadow: var(--shadow);
-            font-size: 0.8rem;
+            width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
+            background: var(--card-bg); border-radius: 6px; text-decoration: none; color: var(--text);
+            font-weight: bold; box-shadow: var(--shadow); font-size: 0.8rem;
         }
 
         .letter-link.active { background: var(--primary); color: white; transform: scale(1.1); }
 
         .bulk-actions {
-            background: var(--nav-bg);
-            padding: 10px 15px;
-            border-radius: 10px;
-            margin-bottom: 1.2rem;
-            display: none;
-            align-items: center;
-            justify-content: space-between;
-            position: sticky;
-            top: 115px;
-            z-index: 85;
-            box-shadow: var(--shadow);
+            background: var(--nav-bg); padding: 10px 15px; border-radius: 10px; margin-bottom: 1.2rem;
+            display: none; align-items: center; justify-content: space-between;
+            position: sticky; top: 115px; z-index: 85; box-shadow: var(--shadow);
         }
 
         .bulk-actions.visible { display: flex; }
 
-        #selected-info {
-            font-size: 0.9rem;
-            font-weight: bold;
-            color: var(--primary);
-            margin-left: 10px;
-        }
-
         .word-list { display: flex; flex-direction: column; gap: 1.2rem; }
 
         .word-card {
-            background: var(--card-bg);
-            padding: 1.2rem;
-            border-radius: 12px;
-            box-shadow: var(--shadow);
-            border-left: 5px solid var(--primary);
-            transition: all 0.2s ease;
-            border: 2px solid transparent;
-            border-left-width: 5px;
+            background: var(--card-bg); padding: 1.2rem; border-radius: 12px; box-shadow: var(--shadow);
+            border-left: 5px solid var(--primary); transition: all 0.2s ease;
+            border: 2px solid transparent; border-left-width: 5px;
         }
 
-        .word-card.selected {
-            border: 2px solid var(--primary);
-            border-left-width: 5px;
-            background-color: rgba(74, 144, 226, 0.08);
-        }
+        .word-card.selected { border: 2px solid var(--primary); border-left-width: 5px; background-color: rgba(74, 144, 226, 0.08); }
 
-        [data-theme="dark"] .word-card.selected {
-            background-color: rgba(74, 144, 226, 0.15);
-        }
+        [data-theme="dark"] .word-card.selected { background-color: rgba(74, 144, 226, 0.15); }
 
-        .word-checkbox {
-            width: 20px !important;
-            height: 20px !important;
-            cursor: pointer;
-            accent-color: var(--primary);
-        }
+        .word-checkbox { width: 20px !important; height: 20px !important; cursor: pointer; accent-color: var(--primary); }
 
-        .word-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 0.8rem;
-        }
-
+        .word-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px; margin-bottom: 0.8rem; }
         .word-header h4 { margin: 0; font-size: 1.3rem; word-break: break-all; flex: 1; min-width: 180px; }
 
         .action-btns { display: flex; gap: 4px; }
 
         .definition-row {
-            display: flex;
-            gap: 10px;
-            padding: 8px;
-            background: rgba(0,0,0,0.03);
-            border-radius: 8px;
-            margin-bottom: 6px;
-            align-items: baseline;
+            display: flex; gap: 10px; padding: 8px; background: rgba(0,0,0,0.03); border-radius: 8px;
+            margin-bottom: 6px; align-items: baseline;
         }
-
         [data-theme="dark"] .definition-row { background: rgba(255,255,255,0.05); }
 
-        .pos-badge { 
-            color: var(--secondary); 
-            font-weight: bold; 
-            background: rgba(243, 156, 18, 0.15);
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            white-space: nowrap;
-        }
+        .pos-badge { color: var(--secondary); font-weight: bold; background: rgba(243, 156, 18, 0.15); padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; white-space: nowrap; }
 
         .category-menu { display: grid; grid-template-columns: 1fr; gap: 15px; }
         @media (min-width: 600px) { .category-menu { grid-template-columns: repeat(3, 1fr); } }
 
-        .category-card {
-            background: var(--card-bg);
-            padding: 2rem;
-            border-radius: 15px;
-            text-align: center;
-            cursor: pointer;
-            box-shadow: var(--shadow);
-        }
+        .category-card { background: var(--card-bg); padding: 2rem; border-radius: 15px; text-align: center; cursor: pointer; box-shadow: var(--shadow); transition: transform 0.2s; }
+        .category-card:hover { transform: translateY(-5px); }
         .category-card i { font-size: 2.5rem; margin-bottom: 0.8rem; display: block; }
         .category-card h3 { margin: 0.5rem 0; font-size: 1.2rem; }
         .category-card p { margin: 0; font-size: 0.9rem; opacity: 0.7; }
@@ -307,12 +232,13 @@
         <h1 onclick="showSection('home')">English Master 📖</h1>
     </div>
     <div class="nav-right">
-        <span id="stat-count-nav" class="stat-badge" style="font-size:0.8rem; font-weight:bold; opacity:0.8;">0 Vocab</span>
-        <button class="theme-toggle" onclick="toggleTheme()" style="border-radius:15px; padding:3px 8px; font-size:1rem; display:flex; align-items:center; justify-content:center;"><span id="themeLabel">🌙</span></button>
+        <span id="stat-count-nav" class="stat-badge" style="font-size:0.8rem; font-weight:bold; opacity:0.8;"></span>
+        <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle"><span id="themeLabel">🌙</span></button>
     </div>
 </nav>
 
 <div class="container">
+    <!-- Home Section -->
     <div id="home-section" class="view-section active">
         <div class="category-menu">
             <div class="category-card" onclick="showSection('vocabulary')"><i>🔤</i><h3>Vocabulary</h3><p>單字管理</p></div>
@@ -321,6 +247,7 @@
         </div>
     </div>
 
+    <!-- Vocabulary Section -->
     <div id="vocabulary-section" class="view-section">
         <div class="card" id="addWordCard">
             <div class="section-title">➕ 新增單字</div>
@@ -331,16 +258,13 @@
                 <button type="submit" class="btn-add">新增</button>
             </form>
         </div>
-
         <div class="search-container">
             <div class="input-wrapper">
-                <input type="text" id="searchQuery" class="search-input" placeholder="🔍 搜尋..." oninput="searchWords()" inputmode="search">
+                <input type="text" id="searchQuery" class="search-input" placeholder="🔍 搜尋單字..." oninput="searchWords()" inputmode="search">
                 <button type="button" class="btn-clear-inner" onclick="clearInput('searchQuery'); searchWords();">✕</button>
             </div>
         </div>
-
         <div class="alphabet-nav" id="alphabetNav"></div>
-
         <div class="bulk-actions" id="bulkActions">
             <div style="display:flex; align-items:center;">
                 <input type="checkbox" id="selectAll" onchange="toggleSelectAll()" style="width:20px; height:20px; cursor:pointer; accent-color:var(--primary);"> 
@@ -349,123 +273,147 @@
             </div>
             <button class="btn-delete" onclick="deleteSelected()" style="padding:6px 12px;">批量刪除</button>
         </div>
-
         <div id="loader" style="text-align:center; display:none; padding:2rem;">載入中...</div>
         <div id="displayArea" class="word-list"></div>
     </div>
 
-    <div id="phrase-section" class="view-section"><div class="card" style="text-align:center; padding:3rem;"><h2>🗣️ Phrase</h2><p>開發中...</p></div></div>
+    <!-- Phrase Section -->
+    <div id="phrase-section" class="view-section">
+        <div class="card" id="addPhraseCard">
+            <div class="section-title">➕ 新增片語</div>
+            <form onsubmit="event.preventDefault(); addPhrase();" class="input-grid" style="grid-template-columns: 1fr 1.5fr auto;">
+                <div class="input-wrapper"><input type="text" id="phraseInput" placeholder="片語" inputmode="latin"><button type="button" class="btn-clear-inner" onclick="clearInput('phraseInput')">✕</button></div>
+                <div class="input-wrapper"><input type="text" id="phraseMeaningInput" placeholder="意思"><button type="button" class="btn-clear-inner" onclick="clearInput('phraseMeaningInput')">✕</button></div>
+                <button type="submit" class="btn-add">新增</button>
+            </form>
+        </div>
+        <div class="search-container">
+            <div class="input-wrapper">
+                <input type="text" id="phraseSearchQuery" class="search-input" placeholder="🔍 搜尋片語..." oninput="searchPhrases()" inputmode="search">
+                <button type="button" class="btn-clear-inner" onclick="clearInput('phraseSearchQuery'); searchPhrases();">✕</button>
+            </div>
+        </div>
+        <div class="alphabet-nav" id="phraseAlphabetNav"></div>
+        <div class="bulk-actions" id="phraseBulkActions">
+            <div style="display:flex; align-items:center;">
+                <input type="checkbox" id="phraseSelectAll" onchange="togglePhraseSelectAll()" style="width:20px; height:20px; cursor:pointer; accent-color:var(--primary);"> 
+                <label for="phraseSelectAll" style="font-weight:bold; font-size:0.9rem; cursor:pointer; margin-left:5px;">全選</label>
+                <span id="phrase-selected-info" style="margin-left:10px; font-size:0.9rem; font-weight:bold; color:var(--primary);"></span>
+            </div>
+            <button class="btn-delete" onclick="deleteSelectedPhrases()" style="padding:6px 12px;">批量刪除</button>
+        </div>
+        <div id="phraseLoader" style="text-align:center; display:none; padding:2rem;">載入中...</div>
+        <div id="phraseDisplayArea" class="word-list"></div>
+    </div>
+
     <div id="slang-section" class="view-section"><div class="card" style="text-align:center; padding:3rem;"><h2>🤪 Slang</h2><p>開發中...</p></div></div>
 </div>
 
 <div class="scroll-top-btn" id="scrollTopBtn" onclick="window.scrollTo({top:0, behavior:'smooth'})">↑</div>
 
 <script>
-    let currentQuery = '';
+    let currentVocabQuery = '';
+    let currentPhraseQuery = '';
     let activeLetter = null;
+    let phraseActiveLetter = null;
 
     function clearInput(id) {
         const input = document.getElementById(id);
-        input.value = '';
-        input.focus();
+        if (input) { input.value = ''; input.focus(); }
     }
 
     function showSection(id) {
         document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
         document.getElementById(id + '-section').classList.add('active');
         document.getElementById('btnBackHome').style.display = (id === 'home') ? 'none' : 'flex';
-        if (id === 'vocabulary') updateView();
+        
+        // 重置字母導航與統計
+        activeLetter = null;
+        phraseActiveLetter = null;
+        document.getElementById('stat-count-nav').innerText = '';
+
+        if (id === 'vocabulary') updateVocabView();
+        if (id === 'phrase') updatePhraseView();
+        
         window.scrollTo(0,0);
     }
 
+    // --- Theme Logic ---
     function toggleTheme() {
-        const body = document.body;
-        const theme = body.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+        const theme = document.body.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
         applyTheme(theme);
         localStorage.setItem('user_theme', theme);
     }
-
     function applyTheme(theme) {
         document.body.setAttribute('data-theme', theme);
-        const label = document.getElementById('themeLabel');
-        if (label) label.innerText = theme === 'light' ? '🌙' : '☀️';
+        document.getElementById('themeLabel').innerText = (theme === 'light') ? '🌙' : '☀️';
     }
+    applyTheme(localStorage.getItem('user_theme') || 'light');
 
-    // 初始化主題
-    const savedTheme = localStorage.getItem('user_theme') || 'light';
-    applyTheme(savedTheme);
+    // --- Alphabet Nav Initialization ---
+    function initAlphabetNav(navId, type) {
+        const nav = document.getElementById(navId);
+        nav.innerHTML = '';
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZ#'.split('').forEach(char => {
+            const a = document.createElement('a');
+            a.className = 'letter-link';
+            a.innerText = char;
+            a.href = 'javascript:void(0)';
+            a.onclick = () => {
+                if (type === 'vocab') {
+                    activeLetter = (activeLetter === char) ? null : char;
+                    updateVocabView();
+                } else {
+                    phraseActiveLetter = (phraseActiveLetter === char) ? null : char;
+                    updatePhraseView();
+                }
+            };
+            nav.appendChild(a);
+        });
+    }
+    initAlphabetNav('alphabetNav', 'vocab');
+    initAlphabetNav('phraseAlphabetNav', 'phrase');
 
-    const nav = document.getElementById('alphabetNav');
-    'ABCDEFGHIJKLMNOPQRSTUVWXYZ#'.split('').forEach(char => {
-        const a = document.createElement('a');
-        a.className = 'letter-link';
-        a.innerText = char;
-        a.href = 'javascript:void(0)';
-        a.onclick = () => {
-            if (activeLetter === char) activeLetter = null;
-            else activeLetter = char;
-            updateView();
-        };
-        nav.appendChild(a);
-    });
-
-    async function updateView() {
+    // --- Vocabulary Management ---
+    async function updateVocabView() {
         const loader = document.getElementById('loader');
-        const qInput = document.getElementById('searchQuery');
-        if (qInput) currentQuery = qInput.value.trim();
-
+        const q = document.getElementById('searchQuery').value.trim();
         loader.style.display = 'block';
-        
         try {
-            let url = '/api/words';
-            if (currentQuery) url = `/api/search?q=${encodeURIComponent(currentQuery)}`;
-            
+            const t = new Date().getTime();
+            let url = `/api/words?t=${t}`;
+            if (q) url = `/api/search?q=${encodeURIComponent(q)}&t=${t}`;
             const res = await fetch(url);
             if (!res.ok) throw new Error("Offline");
             const words = await res.json();
-            
-            // 連線成功，備份到本地
-            if (!currentQuery && !activeLetter) {
-                localStorage.setItem('offline_vocab_data', JSON.stringify(words));
-            }
-            
+            if (!q && !activeLetter) localStorage.setItem('offline_vocab_data', JSON.stringify(words));
             loader.style.display = 'none';
-            refreshDisplay(words, true);
+            refreshVocabDisplay(words, true);
         } catch (e) {
-            console.warn("切換至離線模式");
+            console.warn("切換至離線模式 (Vocab)");
             loader.style.display = 'none';
-            
             const cachedData = localStorage.getItem('offline_vocab_data');
             if (cachedData) {
                 let words = JSON.parse(cachedData);
-                // 離線過濾
-                if (currentQuery) {
-                    const q = currentQuery.toLowerCase();
-                    words = words.filter(w => 
-                        w.word.toLowerCase().includes(q) || 
-                        w.definitions.some(d => d.meaning.toLowerCase().includes(q))
-                    );
+                if (q) {
+                    const qLower = q.toLowerCase();
+                    words = words.filter(w => w.word.toLowerCase().includes(qLower) || w.definitions.some(d => d.meaning.toLowerCase().includes(qLower)));
                 }
-                refreshDisplay(words, false);
+                refreshVocabDisplay(words, false);
             } else {
                 document.getElementById('displayArea').innerHTML = `<div style="text-align:center; padding:5rem; opacity:0.5;">離線中且無快取</div>`;
             }
         }
     }
 
-    function searchWords() { updateView(); }
+    function searchWords() { updateVocabView(); }
 
-    function refreshDisplay(words, isOnline) {
+    function refreshVocabDisplay(words, isOnline) {
         const area = document.getElementById('displayArea');
         area.innerHTML = '';
-        
-        // 離線隱藏新增功能
         document.getElementById('addWordCard').style.display = isOnline ? 'block' : 'none';
-
-        document.querySelectorAll('.letter-link').forEach(l => {
-            l.classList.toggle('active', l.innerText === activeLetter);
-        });
-
+        document.querySelectorAll('#alphabetNav .letter-link').forEach(l => l.classList.toggle('active', l.innerText === activeLetter));
+        
         const groups = {};
         words.forEach(w => {
             let char = w.word[0].toUpperCase();
@@ -482,31 +430,27 @@
             section.innerHTML = `<span style="font-size:1.5rem; color:var(--primary); font-weight:bold; display:block; border-bottom:2.5px solid var(--primary); margin:2rem 0 1rem;">${char}</span>`;
             const list = document.createElement('div');
             list.className = 'word-list';
-            
-            groups[char].sort((a,b) => a.word.localeCompare(b.word)).forEach((w) => {
+            groups[char].forEach(w => {
                 const card = document.createElement('div');
                 card.className = 'word-card';
-                card.id = `card-${w.word.replace(/\s+/g, '_')}`;
-                
+                card.id = `vocab-card-${w.word.replace(/\s+/g, '_')}`;
                 let defs = '';
-                w.definitions.forEach(d => {
-                    defs += `<div class="definition-row"><span class="pos-badge">${d.type}</span><span style="font-size:0.95rem;">${d.meaning}</span></div>`;
-                });
-
+                w.definitions.forEach(d => { defs += `<div class="definition-row"><span class="pos-badge">${d.type}</span><span>${d.meaning}</span></div>`; });
+                
                 const actionBtns = isOnline ? `
                     <div class="action-btns">
-                        <button class="btn-edit" onclick="enterEditMode('${encodeURIComponent(w.word)}', ${JSON.stringify(w.definitions).replace(/"/g, '&quot;')})">編輯</button>
+                        <button class="btn-edit" onclick="enterVocabEditMode('${encodeURIComponent(w.word)}', ${JSON.stringify(w.definitions).replace(/"/g, '&quot;')})">編輯</button>
                         <button class="btn-delete" onclick="deleteWord('${w.word}')">刪除</button>
                     </div>
                 ` : '';
 
-                const checkbox = isOnline ? `<input type="checkbox" class="word-checkbox" data-word="${w.word}" onchange="updateSelection()" style="width:18px; height:18px;">` : '';
+                const checkbox = isOnline ? `<input type="checkbox" class="word-checkbox" data-word="${w.word}" onchange="updateVocabSelection()" style="width:20px; height:20px; cursor:pointer;">` : '';
 
                 card.innerHTML = `
                     <div class="word-header">
                         <div style="display:flex; align-items:center; gap:10px;">
                             ${checkbox}
-                            <h4 style="font-size:1.2rem;">${w.word}</h4>
+                            <h4>${w.word}</h4>
                         </div>
                         ${actionBtns}
                     </div>
@@ -517,53 +461,11 @@
             section.appendChild(list);
             area.appendChild(section);
         });
-        
         document.getElementById('stat-count-nav').innerText = `${total} Vocab${isOnline ? '' : ' (Offline)'}`;
         if (total === 0) area.innerHTML = `<div style="text-align:center; opacity:0.5; padding:4rem;">找不到內容</div>`;
-    }
-
-    function enterEditMode(wordEnc, defs) {
-        const word = decodeURIComponent(wordEnc);
-        const card = document.getElementById(`card-${word.replace(/\s+/g, '_')}`);
-        let html = `
-            <div class="input-wrapper" style="margin-bottom:12px;">
-                <input type="text" class="edit-input" id="ew-${wordEnc}" value="${word}" style="font-weight:bold;">
-                <button type="button" class="btn-clear-inner" onclick="clearInput('ew-${wordEnc}')">✕</button>
-            </div>
-        `;
-        defs.forEach((d, i) => {
-            html += `
-                <div style="background:rgba(0,0,0,0.05); padding:12px; border-radius:10px; margin-bottom:10px;">
-                    <div class="input-wrapper" style="margin-bottom:8px;">
-                        <input type="text" class="edit-input" id="et-${wordEnc}-${i}" value="${d.type}" placeholder="詞性">
-                        <button type="button" class="btn-clear-inner" onclick="clearInput('et-${wordEnc}-${i}')">✕</button>
-                    </div>
-                    <div class="input-wrapper">
-                        <textarea class="edit-input" id="em-${wordEnc}-${i}" placeholder="意思" rows="2">${d.meaning}</textarea>
-                        <button type="button" class="btn-clear-inner" onclick="clearInput('em-${wordEnc}-${i}')">✕</button>
-                    </div>
-                </div>
-            `;
-        });
-        html += `<div style="display:flex; gap:8px;"><button class="btn-save" onclick="saveEdit('${wordEnc}', ${defs.length})">儲存</button> <button class="btn-cancel" onclick="updateView()">取消</button></div>`;
-        card.innerHTML = html;
-    }
-
-    async function saveEdit(oldWordEnc, len) {
-        const newWord = document.getElementById(`ew-${oldWordEnc}`).value.trim();
-        const definitions = [];
-        for(let i=0; i<len; i++) {
-            const type = document.getElementById(`et-${oldWordEnc}-${i}`).value.trim();
-            const meaning = document.getElementById(`em-${oldWordEnc}-${i}`).value.trim();
-            if (type && meaning) definitions.push({type, meaning});
-        }
-        if (!newWord || definitions.length === 0) return alert('內容不能為空');
-        await fetch('/api/words/update', {
-            method: 'PUT',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({old_word: decodeURIComponent(oldWordEnc), new_word: newWord, definitions})
-        });
-        updateView();
+        
+        document.getElementById('selectAll').checked = false;
+        updateVocabSelection();
     }
 
     async function addWord() {
@@ -571,81 +473,204 @@
         const type = document.getElementById('posInput').value.trim();
         const meaning = document.getElementById('meaningInput').value.trim();
         if (!word || !meaning) return alert('請輸入內容');
-        const res = await fetch('/api/words', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({word, type, meaning})
-        });
+        const res = await fetch('/api/words', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({word, type, meaning}) });
         const result = await res.json();
         if (result.status === 'exists') alert(result.message);
-        else {
-            ['wordInput', 'posInput', 'meaningInput'].forEach(id => document.getElementById(id).value = '');
-            updateView();
-        }
+        else { ['wordInput', 'posInput', 'meaningInput'].forEach(id => document.getElementById(id).value = ''); updateVocabView(); }
     }
 
-    async function deleteWord(word) {
-        if (confirm(`刪除 '${word}'？`)) {
-            await fetch(`/api/words?word=${encodeURIComponent(word)}`, {method: 'DELETE'});
-            updateView();
-        }
-    }
+    async function deleteWord(word) { if (confirm(`刪除 '${word}'？`)) { await fetch(`/api/words?word=${encodeURIComponent(word)}`, {method: 'DELETE'}); updateVocabView(); } }
 
-    function updateSelection() {
-        const checkboxes = document.querySelectorAll('.word-checkbox');
-        const selectedCheckboxes = document.querySelectorAll('.word-checkbox:checked');
-        const count = selectedCheckboxes.length;
-        
-        checkboxes.forEach(cb => {
-            const card = cb.closest('.word-card');
-            if (cb.checked) {
-                card.classList.add('selected');
-            } else {
-                card.classList.remove('selected');
-            }
+    function enterVocabEditMode(wordEnc, defs) {
+        const word = decodeURIComponent(wordEnc);
+        const card = document.getElementById(`vocab-card-${word.replace(/\s+/g, '_')}`);
+        let html = `<div class="input-wrapper" style="margin-bottom:10px;"><input type="text" id="ew-${wordEnc}" value="${word}"><button type="button" class="btn-clear-inner" onclick="clearInput('ew-${wordEnc}')">✕</button></div>`;
+        defs.forEach((d, i) => {
+            html += `<div style="background:rgba(0,0,0,0.05); padding:10px; border-radius:8px; margin-bottom:10px;">
+                <input type="text" id="et-${wordEnc}-${i}" value="${d.type}" style="margin-bottom:5px;">
+                <textarea id="em-${wordEnc}-${i}" rows="2">${d.meaning}</textarea>
+            </div>`;
         });
-
-        const selectAllCb = document.getElementById('selectAll');
-        if (checkboxes.length > 0) {
-            selectAllCb.checked = (count === checkboxes.length);
-        }
-
-        const bulkActions = document.getElementById('bulkActions');
-        const info = document.getElementById('selected-info');
-        
-        if (count > 0) {
-            bulkActions.classList.add('visible');
-            info.innerText = `(已選取 ${count} 個項目)`;
-        } else {
-            bulkActions.classList.remove('visible');
-            info.innerText = '';
-        }
+        html += `<div style="display:flex; gap:8px;"><button class="btn-save" onclick="saveVocabEdit('${wordEnc}', ${defs.length})">儲存</button><button class="btn-cancel" onclick="updateVocabView()">取消</button></div>`;
+        card.innerHTML = html;
     }
 
+    async function saveVocabEdit(oldWordEnc, len) {
+        const newWord = document.getElementById(`ew-${oldWordEnc}`).value.trim();
+        const definitions = [];
+        for(let i=0; i<len; i++) {
+            const type = document.getElementById(`et-${oldWordEnc}-${i}`).value.trim();
+            const meaning = document.getElementById(`em-${oldWordEnc}-${i}`).value.trim();
+            if (type && meaning) definitions.push({type, meaning});
+        }
+        await fetch('/api/words/update', { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({old_word: decodeURIComponent(oldWordEnc), new_word: newWord, definitions}) });
+        updateVocabView();
+    }
+
+    function updateVocabSelection() {
+        const checkboxes = document.querySelectorAll('.word-checkbox');
+        const count = document.querySelectorAll('.word-checkbox:checked').length;
+        checkboxes.forEach(cb => cb.closest('.word-card').classList.toggle('selected', cb.checked));
+        document.getElementById('selectAll').checked = (checkboxes.length > 0 && count === checkboxes.length);
+        document.getElementById('bulkActions').classList.toggle('visible', count > 0);
+        document.getElementById('selected-info').innerText = count > 0 ? `已選取 ${count} 個` : '';
+    }
     function toggleSelectAll() {
         const checked = document.getElementById('selectAll').checked;
-        document.querySelectorAll('.word-checkbox').forEach(cb => {
-            cb.checked = checked;
-        });
-        updateSelection();
+        document.querySelectorAll('.word-checkbox').forEach(cb => cb.checked = checked);
+        updateVocabSelection();
     }
-
     async function deleteSelected() {
         const words = Array.from(document.querySelectorAll('.word-checkbox:checked')).map(cb => cb.dataset.word);
         if (words.length && confirm(`刪除這 ${words.length} 個單字？`)) {
-            await fetch('/api/words/batch', {
-                method: 'DELETE',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({words})
-            });
-            updateView();
+            await fetch('/api/words/batch', { method: 'DELETE', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({words}) });
+            updateVocabView();
         }
     }
 
-    window.onscroll = () => {
-        const btn = document.getElementById('scrollTopBtn');
-        btn.style.display = window.scrollY > 300 ? 'flex' : 'none';
-    };
+    // --- Phrase Management ---
+    async function updatePhraseView() {
+        const loader = document.getElementById('phraseLoader');
+        const q = document.getElementById('phraseSearchQuery').value.trim();
+        loader.style.display = 'block';
+        try {
+            const t = new Date().getTime();
+            let url = `/api/phrases?t=${t}`;
+            if (q) url = `/api/phrases/search?q=${encodeURIComponent(q)}&t=${t}`;
+            const res = await fetch(url);
+            if (!res.ok) throw new Error("Offline");
+            const phrases = await res.json();
+            if (!q && !phraseActiveLetter) localStorage.setItem('offline_phrase_data', JSON.stringify(phrases));
+            loader.style.display = 'none';
+            refreshPhraseDisplay(phrases, true);
+        } catch (e) {
+            console.warn("切換至離線模式 (Phrase)");
+            loader.style.display = 'none';
+            const cachedData = localStorage.getItem('offline_phrase_data');
+            if (cachedData) {
+                let phrases = JSON.parse(cachedData);
+                if (q) {
+                    const qLower = q.toLowerCase();
+                    phrases = phrases.filter(p => p.phrase.toLowerCase().includes(qLower) || p.meaning.toLowerCase().includes(qLower));
+                }
+                refreshPhraseDisplay(phrases, false);
+            } else {
+                document.getElementById('phraseDisplayArea').innerHTML = `<div style="text-align:center; padding:5rem; opacity:0.5;">離線中且無快取</div>`;
+            }
+        }
+    }
+
+    function searchPhrases() { updatePhraseView(); }
+
+    function refreshPhraseDisplay(phrases, isOnline) {
+        const area = document.getElementById('phraseDisplayArea');
+        area.innerHTML = '';
+        document.getElementById('addPhraseCard').style.display = isOnline ? 'block' : 'none';
+        document.querySelectorAll('#phraseAlphabetNav .letter-link').forEach(l => l.classList.toggle('active', l.innerText === phraseActiveLetter));
+        
+        const groups = {};
+        phrases.forEach(p => {
+            let char = p.phrase[0].toUpperCase();
+            if (!/[A-Z]/.test(char)) char = '#';
+            if (phraseActiveLetter && char !== phraseActiveLetter) return;
+            if (!groups[char]) groups[char] = [];
+            groups[char].push(p);
+        });
+
+        let total = 0;
+        Object.keys(groups).sort().forEach(char => {
+            total += groups[char].length;
+            const section = document.createElement('div');
+            section.innerHTML = `<span style="font-size:1.5rem; color:var(--primary); font-weight:bold; display:block; border-bottom:2.5px solid var(--primary); margin:2rem 0 1rem;">${char}</span>`;
+            const list = document.createElement('div');
+            list.className = 'word-list';
+            groups[char].forEach(p => {
+                const card = document.createElement('div');
+                card.className = 'word-card';
+                card.id = `phrase-card-${p.phrase.replace(/\s+/g, '_')}`;
+                
+                const actionBtns = isOnline ? `
+                    <div class="action-btns">
+                        <button class="btn-edit" onclick="enterPhraseEditMode('${encodeURIComponent(p.phrase)}', '${p.meaning.replace(/'/g, "\\'")}')">編輯</button>
+                        <button class="btn-delete" onclick="deletePhrase('${p.phrase}')">刪除</button>
+                    </div>
+                ` : '';
+
+                const checkbox = isOnline ? `<input type="checkbox" class="phrase-checkbox" data-phrase="${p.phrase}" onchange="updatePhraseSelection()" style="width:20px; height:20px; cursor:pointer; accent-color:var(--primary);">` : '';
+
+                card.innerHTML = `
+                    <div class="word-header">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            ${checkbox}
+                            <h4>${p.phrase}</h4>
+                        </div>
+                        ${actionBtns}
+                    </div>
+                    <div style="padding:10px; background:rgba(0,0,0,0.03); border-radius:8px; font-size:0.95rem;">${p.meaning}</div>
+                `;
+                list.appendChild(card);
+            });
+            section.appendChild(list);
+            area.appendChild(section);
+        });
+        document.getElementById('stat-count-nav').innerText = `${total} Phrases${isOnline ? '' : ' (Offline)'}`;
+        if (total === 0) area.innerHTML = `<div style="text-align:center; opacity:0.5; padding:4rem;">找不到內容</div>`;
+        
+        document.getElementById('phraseSelectAll').checked = false;
+        updatePhraseSelection();
+    }
+
+    async function addPhrase() {
+        const phrase = document.getElementById('phraseInput').value.trim();
+        const meaning = document.getElementById('phraseMeaningInput').value.trim();
+        if (!phrase || !meaning) return alert('請輸入內容');
+        const res = await fetch('/api/phrases', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({phrase, meaning}) });
+        const result = await res.json();
+        if (result.status === 'exists') alert(result.message);
+        else { ['phraseInput', 'phraseMeaningInput'].forEach(id => document.getElementById(id).value = ''); updatePhraseView(); }
+    }
+
+    async function deletePhrase(phrase) { if (confirm(`刪除片語 '${phrase}'？`)) { await fetch(`/api/phrases?phrase=${encodeURIComponent(phrase)}`, {method: 'DELETE'}); updatePhraseView(); } }
+
+    function enterPhraseEditMode(phraseEnc, meaning) {
+        const phrase = decodeURIComponent(phraseEnc);
+        const card = document.getElementById(`phrase-card-${phrase.replace(/\s+/g, '_')}`);
+        card.innerHTML = `
+            <div class="input-wrapper" style="margin-bottom:10px;"><input type="text" id="ep-${phraseEnc}" value="${phrase}"><button type="button" class="btn-clear-inner" onclick="clearInput('ep-${phraseEnc}')">✕</button></div>
+            <div class="input-wrapper" style="margin-bottom:10px;"><textarea id="em-${phraseEnc}" rows="2">${meaning}</textarea><button type="button" class="btn-clear-inner" onclick="clearInput('em-${phraseEnc}')">✕</button></div>
+            <div style="display:flex; gap:8px;"><button class="btn-save" onclick="savePhraseEdit('${phraseEnc}')">儲存</button><button class="btn-cancel" onclick="updatePhraseView()">取消</button></div>
+        `;
+    }
+
+    async function savePhraseEdit(phraseEnc) {
+        const newPhrase = document.getElementById(`ep-${phraseEnc}`).value.trim();
+        const meaning = document.getElementById(`em-${phraseEnc}`).value.trim();
+        await fetch('/api/phrases/update', { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({old_phrase: decodeURIComponent(phraseEnc), new_phrase: newPhrase, meaning}) });
+        updatePhraseView();
+    }
+
+    function updatePhraseSelection() {
+        const checkboxes = document.querySelectorAll('.phrase-checkbox');
+        const count = document.querySelectorAll('.phrase-checkbox:checked').length;
+        checkboxes.forEach(cb => cb.closest('.word-card').classList.toggle('selected', cb.checked));
+        document.getElementById('phraseSelectAll').checked = (checkboxes.length > 0 && count === checkboxes.length);
+        document.getElementById('phraseBulkActions').classList.toggle('visible', count > 0);
+        document.getElementById('phrase-selected-info').innerText = count > 0 ? `已選取 ${count} 個` : '';
+    }
+    function togglePhraseSelectAll() {
+        const checked = document.getElementById('phraseSelectAll').checked;
+        document.querySelectorAll('.phrase-checkbox').forEach(cb => cb.checked = checked);
+        updatePhraseSelection();
+    }
+    async function deleteSelectedPhrases() {
+        const phrases = Array.from(document.querySelectorAll('.phrase-checkbox:checked')).map(cb => cb.dataset.phrase);
+        if (phrases.length && confirm(`刪除這 ${phrases.length} 個片語？`)) {
+            await fetch('/api/phrases/batch', { method: 'DELETE', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({phrases}) });
+            updatePhraseView();
+        }
+    }
+
+    window.onscroll = () => { document.getElementById('scrollTopBtn').style.display = window.scrollY > 300 ? 'flex' : 'none'; };
 </script>
 </body>
 </html>
