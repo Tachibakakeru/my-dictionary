@@ -23,14 +23,30 @@
             background: var(--nav-bg); padding: 0.6rem 1rem; box-shadow: var(--shadow);
             position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center;
         }
-        .nav-left { display: flex; align-items: center; gap: 10px; }
-        .nav-right { display: flex; align-items: center; gap: 12px; }
-        .navbar h1 { margin: 0; font-size: 1.1rem; color: var(--primary); cursor: pointer; white-space: nowrap; }
-        
+        .nav-left { display: flex; align-items: center; gap: 8px; flex-shrink: 1; min-width: 0; }
+        .nav-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+        .navbar h1 { 
+            margin: 0; 
+            font-size: 1.1rem; 
+            color: var(--primary); 
+            cursor: pointer; 
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        @media (max-width: 480px) {
+            .navbar { padding: 0.6rem 0.8rem; }
+            .navbar h1 { font-size: 1rem; }
+            .btn-back { padding: 4px 6px; font-size: 0.8rem; }
+            .stat-badge { font-size: 0.75rem !important; }
+        }
+
         .btn-back {
             background: none; border: 1.5px solid var(--primary); color: var(--primary);
             padding: 4px 10px; border-radius: 8px; cursor: pointer; font-size: 0.85rem;
             font-weight: bold; display: none; align-items: center; gap: 5px;
+            flex-shrink: 0;
         }
 
         .stat-badge { font-size: 0.8rem; font-weight: bold; opacity: 0.8; }
