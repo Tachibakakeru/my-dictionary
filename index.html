@@ -109,7 +109,7 @@
         <h1 onclick="showSection('home')">English Master 📖</h1>
     </div>
     <div class="nav-right">
-        <span id="statCount" class="stat-badge">0 Vocab</span>
+        <span id="statCount" class="stat-badge">0</span>
         <button onclick="toggleTheme()" id="themeToggle" style="background:none; border:1px solid var(--primary); color:var(--primary); border-radius:15px; padding:3px 8px; font-size:1rem; cursor:pointer; font-weight:bold; display:flex; align-items:center; justify-content:center;">🌙</button>
     </div>
 </nav>
@@ -128,104 +128,187 @@
     <div id="vocabulary-section" class="view-section">
         <div class="search-container">
             <div class="input-wrapper">
-                <input type="text" id="searchQuery" placeholder="🔍 搜尋單字或意思..." oninput="updateView()">
-                <button class="btn-clear" onclick="document.getElementById('searchQuery').value=''; updateView();">✕</button>
+                <input type="text" id="searchQuery" placeholder="🔍 搜尋單字或意思..." oninput="updateView('vocab')">
+                <button class="btn-clear" onclick="document.getElementById('searchQuery').value=''; updateView('vocab');">✕</button>
             </div>
         </div>
         <div class="alphabet-nav" id="alphabetNav"></div>
         <div id="displayArea" class="word-list"></div>
     </div>
 
-    <!-- 預留視圖 -->
-    <div id="phrase-section" class="view-section"><div class="card" style="text-align:center; padding:3rem;"><h2>🗣️ Phrase Section</h2><p>開發中...</p></div></div>
-    <div id="slang-section" class="view-section"><div class="card" style="text-align:center; padding:3rem;"><h2>🤪 Slang & Idiom & Proverb</h2><p>開發中...</p></div></div>
+    <!-- Phrase 視圖 -->
+    <div id="phrase-section" class="view-section">
+        <div class="search-container">
+            <div class="input-wrapper">
+                <input type="text" id="phraseSearchQuery" placeholder="🔍 搜尋片語..." oninput="updateView('phrase')">
+                <button class="btn-clear" onclick="document.getElementById('phraseSearchQuery').value=''; updateView('phrase');">✕</button>
+            </div>
+        </div>
+        <div class="alphabet-nav" id="phraseAlphabetNav"></div>
+        <div id="phraseDisplayArea" class="word-list"></div>
+    </div>
+
+    <!-- Slang 視圖 -->
+    <div id="slang-section" class="view-section">
+        <div class="search-container">
+            <div class="input-wrapper">
+                <input type="text" id="slangSearchQuery" placeholder="🔍 搜尋俚語或諺語..." oninput="updateView('slang')">
+                <button class="btn-clear" onclick="document.getElementById('slangSearchQuery').value=''; updateView('slang');">✕</button>
+            </div>
+        </div>
+        <div class="alphabet-nav" id="slangAlphabetNav"></div>
+        <div id="slangDisplayArea" class="word-list"></div>
+    </div>
 </div>
 
 <div class="scroll-top" id="scrollTopBtn" onclick="window.scrollTo({top:0, behavior:'smooth'})">↑</div>
 
 <script>
     let allWords = [];
+    let allPhrases = [];
+    let allSlangs = [];
     let activeLetter = null;
+    let currentCategory = 'vocab';
 
-    // 初始化字母導覽
-    const nav = document.getElementById('alphabetNav');
-    'ABCDEFGHIJKLMNOPQRSTUVWXYZ#'.split('').forEach(char => {
-        const a = document.createElement('a');
-        a.className = 'letter-link';
-        a.innerText = char;
-        a.href = 'javascript:void(0)';
-        a.onclick = () => {
-            activeLetter = (activeLetter === char) ? null : char;
-            updateView();
-        };
-        nav.appendChild(a);
-    });
+    function initAlphabetNav(navId, category) {
+        const nav = document.getElementById(navId);
+        nav.innerHTML = '';
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZ#'.split('').forEach(char => {
+            const a = document.createElement('a');
+            a.className = 'letter-link';
+            a.innerText = char;
+            a.href = 'javascript:void(0)';
+            a.onclick = () => {
+                activeLetter = (activeLetter === char) ? null : char;
+                updateView(category);
+            };
+            nav.appendChild(a);
+        });
+    }
+
+    initAlphabetNav('alphabetNav', 'vocab');
+    initAlphabetNav('phraseAlphabetNav', 'phrase');
+    initAlphabetNav('slangAlphabetNav', 'slang');
 
     function showSection(id) {
+        currentCategory = (id === 'home' || id === 'vocabulary') ? 'vocab' : id;
         document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
         document.getElementById(id + '-section').classList.add('active');
         document.getElementById('btnBack').style.display = (id === 'home') ? 'none' : 'flex';
+        activeLetter = null;
+        updateView(currentCategory);
         window.scrollTo(0,0);
     }
 
     async function initData() {
         try {
-            const res = await fetch('dictionary.json');
-            if (!res.ok) throw new Error();
-            allWords = await res.json();
-            localStorage.setItem('gh_pages_cache', JSON.stringify(allWords));
+            const [vRes, pRes, sRes] = await Promise.all([
+                fetch('dictionary.json'),
+                fetch('phrases.json'),
+                fetch('slangs.json')
+            ]);
+            
+            if (vRes.ok) { allWords = await vRes.json(); localStorage.setItem('vocab_cache', JSON.stringify(allWords)); }
+            if (pRes.ok) { allPhrases = await pRes.json(); localStorage.setItem('phrase_cache', JSON.stringify(allPhrases)); }
+            if (sRes.ok) { allSlangs = await sRes.json(); localStorage.setItem('slang_cache', JSON.stringify(allSlangs)); }
         } catch (e) {
-            const cache = localStorage.getItem('gh_pages_cache');
-            if (cache) allWords = JSON.parse(cache);
+            allWords = JSON.parse(localStorage.getItem('vocab_cache') || '[]');
+            allPhrases = JSON.parse(localStorage.getItem('phrase_cache') || '[]');
+            allSlangs = JSON.parse(localStorage.getItem('slang_cache') || '[]');
         }
-        updateView();
+        updateView('vocab');
     }
 
-    function updateView() {
-        const query = document.getElementById('searchQuery').value.trim().toLowerCase();
-        let filtered = allWords;
+    function updateView(category) {
+        let query = '';
+        let data = [];
+        let areaId = '';
+        let navId = '';
+
+        if (category === 'vocab') {
+            query = document.getElementById('searchQuery').value.trim().toLowerCase();
+            data = allWords;
+            areaId = 'displayArea';
+            navId = 'alphabetNav';
+        } else if (category === 'phrase') {
+            query = document.getElementById('phraseSearchQuery').value.trim().toLowerCase();
+            data = allPhrases;
+            areaId = 'phraseDisplayArea';
+            navId = 'phraseAlphabetNav';
+        } else if (category === 'slang') {
+            query = document.getElementById('slangSearchQuery').value.trim().toLowerCase();
+            data = allSlangs;
+            areaId = 'slangDisplayArea';
+            navId = 'slangAlphabetNav';
+        }
+
+        let filtered = data;
 
         if (activeLetter) {
-            filtered = filtered.filter(w => {
-                let char = w.word[0].toUpperCase();
+            filtered = filtered.filter(item => {
+                let text = (category === 'vocab' ? item.word : (category === 'phrase' ? item.phrase : item.slang));
+                let char = text[0].toUpperCase();
                 if (!/[A-Z]/.test(char)) char = '#';
                 return char === activeLetter;
             });
         }
 
         if (query) {
-            filtered = filtered.filter(w => 
-                w.word.toLowerCase().includes(query) || 
-                w.definitions.some(d => d.meaning.toLowerCase().includes(query))
-            );
+            filtered = filtered.filter(item => {
+                if (category === 'vocab') {
+                    return item.word.toLowerCase().includes(query) || 
+                           item.definitions.some(d => d.meaning.toLowerCase().includes(query));
+                } else if (category === 'phrase') {
+                    return item.phrase.toLowerCase().includes(query) || 
+                           item.meaning.toLowerCase().includes(query);
+                } else if (category === 'slang') {
+                    return item.slang.toLowerCase().includes(query) || 
+                           item.meaning.toLowerCase().includes(query);
+                }
+            });
         }
 
-        render(filtered);
+        render(filtered, category, areaId, navId);
     }
 
-    function render(words) {
-        const area = document.getElementById('displayArea');
+    function render(items, category, areaId, navId) {
+        const area = document.getElementById(areaId);
         area.innerHTML = '';
-        document.querySelectorAll('.letter-link').forEach(l => l.classList.toggle('active', l.innerText === activeLetter));
-        document.getElementById('statCount').innerText = `${words.length} Vocab`;
+        document.querySelectorAll(`#${navId} .letter-link`).forEach(l => l.classList.toggle('active', l.innerText === activeLetter));
+        document.getElementById('statCount').innerText = `${items.length} Items`;
 
-        words.sort((a,b) => a.word.localeCompare(b.word)).forEach(w => {
-            const card = document.createElement('div');
-            card.className = 'word-card';
-            let defsHtml = '';
-            w.definitions.forEach(d => {
-                defsHtml += `<div class="definition-row"><span class="pos-badge">${d.type}</span><span>${d.meaning}</span></div>`;
+        if (category === 'vocab') {
+            items.sort((a,b) => a.word.localeCompare(b.word)).forEach(w => {
+                const card = document.createElement('div');
+                card.className = 'word-card';
+                let defsHtml = '';
+                w.definitions.forEach(d => {
+                    defsHtml += `<div class="definition-row"><span class="pos-badge">${d.type}</span><span>${d.meaning}</span></div>`;
+                });
+                card.innerHTML = `<div class="word-header"><h4>${w.word}</h4></div>${defsHtml}`;
+                area.appendChild(card);
             });
-            card.innerHTML = `<div class="word-header"><h4>${w.word}</h4></div>${defsHtml}`;
-            area.appendChild(card);
-        });
+        } else if (category === 'phrase') {
+            items.sort((a,b) => a.phrase.localeCompare(b.phrase)).forEach(p => {
+                const card = document.createElement('div');
+                card.className = 'word-card';
+                card.innerHTML = `<div class="word-header"><h4>${p.phrase}</h4></div><div class="definition-row"><span>${p.meaning}</span></div>`;
+                area.appendChild(card);
+            });
+        } else if (category === 'slang') {
+            items.sort((a,b) => a.slang.localeCompare(b.slang)).forEach(s => {
+                const card = document.createElement('div');
+                card.className = 'word-card';
+                card.innerHTML = `<div class="word-header"><h4>${s.slang}</h4></div><div class="definition-row"><span>${s.meaning}</span></div>`;
+                area.appendChild(card);
+            });
+        }
     }
 
     function toggleTheme() {
         const body = document.body;
         const currentTheme = body.getAttribute('data-theme');
         const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-        
         applyTheme(newTheme);
         localStorage.setItem('user_theme', newTheme);
     }
@@ -236,7 +319,6 @@
         if (btn) btn.innerText = theme === 'light' ? '🌙' : '☀️';
     }
 
-    // 初始化主題
     const savedTheme = localStorage.getItem('user_theme') || 'light';
     applyTheme(savedTheme);
 
