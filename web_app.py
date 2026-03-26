@@ -11,6 +11,7 @@ app = Flask(__name__, template_folder=os.path.join(BASE_DIR, "templates"))
 # 資料庫路徑
 VOCAB_FILE = os.path.join(BASE_DIR, "dictionary.json")
 PHRASE_FILE = os.path.join(BASE_DIR, "phrases.json")
+SLANG_FILE = os.path.join(BASE_DIR, "slangs.json")
 
 def format_pos(pos):
     """將詞性轉為字首大寫，並處理常見縮寫"""
@@ -199,6 +200,68 @@ def search_phrases():
     query = request.args.get('q', '').lower()
     phrases = load_data(PHRASE_FILE)
     results = [p for p in phrases if query in p['phrase'].lower() or query in p['meaning'].lower()]
+    return jsonify(results)
+
+# --- Slangs API ---
+@app.route('/api/slangs', methods=['GET'])
+def get_slangs():
+    slangs = load_data(SLANG_FILE)
+    slangs.sort(key=lambda x: x['slang'].lower())
+    return jsonify(slangs)
+
+@app.route('/api/slangs', methods=['POST'])
+def add_slang():
+    data = request.get_json(silent=True)
+    slang = data.get('slang', '').strip()
+    meaning = data.get('meaning', '').strip()
+    
+    slangs = load_data(SLANG_FILE)
+    existing = next((s for s in slangs if s['slang'].lower() == slang.lower()), None)
+    
+    if existing:
+        return jsonify({"status": "exists", "message": f"Slang 庫中已存在：'{slang}'"}), 200
+    
+    slangs.append({"slang": slang, "meaning": meaning})
+    save_and_sync(slangs, SLANG_FILE)
+    return jsonify({"success": True})
+
+@app.route('/api/slangs', methods=['DELETE'])
+def delete_slang():
+    slang_to_delete = request.args.get('slang', '').strip()
+    slangs = load_data(SLANG_FILE)
+    new_slangs = [s for s in slangs if s['slang'].lower() != slang_to_delete.lower()]
+    if len(new_slangs) < len(slangs):
+        save_and_sync(new_slangs, SLANG_FILE)
+        return jsonify({"success": True})
+    return jsonify({"error": "Not found"}), 404
+
+@app.route('/api/slangs/batch', methods=['DELETE'])
+def delete_slangs_batch():
+    data = request.get_json(silent=True)
+    slangs_to_delete = {s.lower() for s in data.get('slangs', [])}
+    slangs = load_data(SLANG_FILE)
+    new_slangs = [s for s in slangs if s['slang'].lower() not in slangs_to_delete]
+    save_and_sync(new_slangs, SLANG_FILE)
+    return jsonify({"success": True})
+
+@app.route('/api/slangs/update', methods=['PUT'])
+def update_slang():
+    data = request.get_json(silent=True)
+    old_slang = data.get('old_slang', '').strip()
+    slangs = load_data(SLANG_FILE)
+    slang_item = next((s for s in slangs if s['slang'].lower() == old_slang.lower()), None)
+    if slang_item:
+        slang_item['slang'] = data.get('new_slang', '').strip()
+        slang_item['meaning'] = data.get('meaning', '').strip()
+        save_and_sync(slangs, SLANG_FILE)
+        return jsonify({"success": True})
+    return jsonify({"error": "Not found"}), 404
+
+@app.route('/api/slangs/search', methods=['GET'])
+def search_slangs():
+    query = request.args.get('q', '').lower()
+    slangs = load_data(SLANG_FILE)
+    results = [s for s in slangs if query in s['slang'].lower() or query in s['meaning'].lower()]
     return jsonify(results)
 
 if __name__ == '__main__':
