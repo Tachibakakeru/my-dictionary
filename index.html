@@ -94,6 +94,11 @@
             padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; white-space: nowrap;
         }
 
+        .group-header {
+            font-size: 1.5rem; color: var(--primary); font-weight: bold; display: block;
+            border-bottom: 2.5px solid var(--primary); margin: 1.5rem 0 0.8rem;
+        }
+
         .scroll-top {
             position: fixed; bottom: 20px; right: 20px; width: 45px; height: 45px;
             background: var(--primary); color: white; border-radius: 50%;
@@ -109,7 +114,7 @@
         <h1 onclick="showSection('home')">English Master 📖</h1>
     </div>
     <div class="nav-right">
-        <span id="statCount" class="stat-badge">0</span>
+        <span id="statCount" class="stat-badge"></span>
         <button onclick="toggleTheme()" id="themeToggle" style="background:none; border:1px solid var(--primary); color:var(--primary); border-radius:15px; padding:3px 8px; font-size:1rem; cursor:pointer; font-weight:bold; display:flex; align-items:center; justify-content:center;">🌙</button>
     </div>
 </nav>
@@ -120,7 +125,7 @@
         <div class="category-menu">
             <div class="category-card" onclick="showSection('vocabulary')"><i>🔤</i><h3>Vocabulary</h3><p>單字查詢</p></div>
             <div class="category-card" onclick="showSection('phrase')"><i>🗣️</i><h3>Phrase</h3><p>常用片語</p></div>
-            <div class="category-card" onclick="showSection('slang')"><i>🤪</i><h3>Slang</h3><p>俚語與諺語</p></div>
+            <div class="category-card" onclick="showSection('slang')"><i>🤪</i><h3>Slang & Idiom & Proverb</h3><p>俚語與諺語</p></div>
         </div>
     </div>
 
@@ -152,7 +157,7 @@
     <div id="slang-section" class="view-section">
         <div class="search-container">
             <div class="input-wrapper">
-                <input type="text" id="slangSearchQuery" placeholder="🔍 搜尋俚語或諺語..." oninput="updateView('slang')">
+                <input type="text" id="slangSearchQuery" placeholder="🔍 搜尋 Slang & Idiom & Proverb..." oninput="updateView('slang')">
                 <button class="btn-clear" onclick="document.getElementById('slangSearchQuery').value=''; updateView('slang');">✕</button>
             </div>
         </div>
@@ -191,12 +196,17 @@
     initAlphabetNav('slangAlphabetNav', 'slang');
 
     function showSection(id) {
-        currentCategory = (id === 'home' || id === 'vocabulary') ? 'vocab' : id;
         document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
         document.getElementById(id + '-section').classList.add('active');
         document.getElementById('btnBack').style.display = (id === 'home') ? 'none' : 'flex';
         activeLetter = null;
-        updateView(currentCategory);
+        
+        if (id === 'home') {
+            document.getElementById('statCount').innerText = '';
+        } else {
+            currentCategory = (id === 'vocabulary') ? 'vocab' : id;
+            updateView(currentCategory);
+        }
         window.scrollTo(0,0);
     }
 
@@ -216,7 +226,7 @@
             allPhrases = JSON.parse(localStorage.getItem('phrase_cache') || '[]');
             allSlangs = JSON.parse(localStorage.getItem('slang_cache') || '[]');
         }
-        updateView('vocab');
+        // 不要自動呼叫 updateView，以免在首頁顯示統計
     }
 
     function updateView(category) {
@@ -275,34 +285,52 @@
         const area = document.getElementById(areaId);
         area.innerHTML = '';
         document.querySelectorAll(`#${navId} .letter-link`).forEach(l => l.classList.toggle('active', l.innerText === activeLetter));
-        document.getElementById('statCount').innerText = `${items.length} Items`;
+        
+        let label = 'Items';
+        if (category === 'vocab') label = 'Vocab';
+        else if (category === 'phrase') label = 'Phrases';
+        document.getElementById('statCount').innerText = `${items.length} ${label}`;
 
-        if (category === 'vocab') {
-            items.sort((a,b) => a.word.localeCompare(b.word)).forEach(w => {
+        // 分群邏輯 (A-Z Headers)
+        const groups = {};
+        items.forEach(item => {
+            let text = (category === 'vocab' ? item.word : (category === 'phrase' ? item.phrase : item.slang));
+            if (!text) return;
+            let char = text[0].toUpperCase();
+            if (!/[A-Z]/.test(char)) char = '#';
+            if (!groups[char]) groups[char] = [];
+            groups[char].push(item);
+        });
+
+        Object.keys(groups).sort().forEach(char => {
+            const section = document.createElement('div');
+            section.innerHTML = `<span class="group-header">${char}</span>`;
+            const list = document.createElement('div');
+            list.className = 'word-list';
+            
+            groups[char].sort((a, b) => {
+                let textA = (category === 'vocab' ? a.word : (category === 'phrase' ? a.phrase : a.slang)).toLowerCase();
+                let textB = (category === 'vocab' ? b.word : (category === 'phrase' ? b.phrase : b.slang)).toLowerCase();
+                return textA.localeCompare(textB);
+            }).forEach(item => {
                 const card = document.createElement('div');
                 card.className = 'word-card';
-                let defsHtml = '';
-                w.definitions.forEach(d => {
-                    defsHtml += `<div class="definition-row"><span class="pos-badge">${d.type}</span><span>${d.meaning}</span></div>`;
-                });
-                card.innerHTML = `<div class="word-header"><h4>${w.word}</h4></div>${defsHtml}`;
-                area.appendChild(card);
+                if (category === 'vocab') {
+                    let defsHtml = '';
+                    item.definitions.forEach(d => {
+                        defsHtml += `<div class="definition-row"><span class="pos-badge">${d.type}</span><span>${d.meaning}</span></div>`;
+                    });
+                    card.innerHTML = `<div class="word-header"><h4>${item.word}</h4></div>${defsHtml}`;
+                } else if (category === 'phrase') {
+                    card.innerHTML = `<div class="word-header"><h4>${item.phrase}</h4></div><div class="definition-row"><span>${item.meaning}</span></div>`;
+                } else if (category === 'slang') {
+                    card.innerHTML = `<div class="word-header"><h4>${item.slang}</h4></div><div class="definition-row"><span>${item.meaning}</span></div>`;
+                }
+                list.appendChild(card);
             });
-        } else if (category === 'phrase') {
-            items.sort((a,b) => a.phrase.localeCompare(b.phrase)).forEach(p => {
-                const card = document.createElement('div');
-                card.className = 'word-card';
-                card.innerHTML = `<div class="word-header"><h4>${p.phrase}</h4></div><div class="definition-row"><span>${p.meaning}</span></div>`;
-                area.appendChild(card);
-            });
-        } else if (category === 'slang') {
-            items.sort((a,b) => a.slang.localeCompare(b.slang)).forEach(s => {
-                const card = document.createElement('div');
-                card.className = 'word-card';
-                card.innerHTML = `<div class="word-header"><h4>${s.slang}</h4></div><div class="definition-row"><span>${s.meaning}</span></div>`;
-                area.appendChild(card);
-            });
-        }
+            section.appendChild(list);
+            area.appendChild(section);
+        });
     }
 
     function toggleTheme() {
