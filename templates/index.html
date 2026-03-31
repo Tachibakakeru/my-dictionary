@@ -487,7 +487,12 @@
         const word = decodeURIComponent(wordEnc);
         const card = document.getElementById(`vocab-card-${word.replace(/\s+/g, '_')}`);
         let html = `<div class="input-wrapper" style="margin-bottom:10px;"><input type="text" id="ew-${wordEnc}" value="${word}"><button type="button" class="btn-clear-inner" onclick="clearInput('ew-${wordEnc}')">✕</button></div>`;
-        defs.forEach((d, i) => { html += `<div style="background:rgba(0,0,0,0.05); padding:10px; border-radius:8px; margin-bottom:10px;"><input type="text" id="et-${wordEnc}-${i}" value="${d.type}" style="margin-bottom:5px;"><textarea id="em-${wordEnc}-${i}" rows="2">${d.meaning}</textarea></div>`; });
+        defs.forEach((d, i) => { 
+            html += `<div style="background:rgba(0,0,0,0.05); padding:10px; border-radius:8px; margin-bottom:10px;">
+                <div class="input-wrapper" style="margin-bottom:5px;"><input type="text" id="et-${wordEnc}-${i}" value="${d.type}"><button type="button" class="btn-clear-inner" onclick="clearInput('et-${wordEnc}-${i}')">✕</button></div>
+                <div class="input-wrapper"><textarea id="em-${wordEnc}-${i}" rows="2">${d.meaning}</textarea><button type="button" class="btn-clear-inner" onclick="clearInput('em-${wordEnc}-${i}')">✕</button></div>
+            </div>`; 
+        });
         html += `<div style="display:flex; gap:8px;"><button class="btn-save" onclick="saveVocabEdit('${wordEnc}', ${defs.length})">儲存</button><button class="btn-cancel" onclick="updateVocabView()">取消</button></div>`;
         card.innerHTML = html;
     }
