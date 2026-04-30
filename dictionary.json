@@ -20472,5 +20472,32 @@
                 "meaning": "隨流行音樂跳舞。"
             }
         ]
+    },
+    {
+        "word": "hobo",
+        "definitions": [
+            {
+                "type": "Noun",
+                "meaning": "流浪漢，無業遊民。"
+            }
+        ]
+    },
+    {
+        "word": "populist",
+        "definitions": [
+            {
+                "type": "Adjective",
+                "meaning": "平民主義的；民粹主義的。"
+            }
+        ]
+    },
+    {
+        "word": "shag",
+        "definitions": [
+            {
+                "type": "Verb",
+                "meaning": "（與…）發生性關係；（棒球）接球;撿球。"
+            }
+        ]
     }
 ]
