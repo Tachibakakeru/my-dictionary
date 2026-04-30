@@ -19762,7 +19762,7 @@
         "definitions": [
             {
                 "type": "Noun",
-                "meaning": "世仇;族間血仇;宿怨。"
+                "meaning": "世仇；族間血仇；宿怨。"
             }
         ]
     },
@@ -20460,7 +20460,16 @@
         "definitions": [
             {
                 "type": "Adjective",
-                "meaning": "（容器）密封的，不透氣的；（人群）與世隔絕的，不與外界往來的"
+                "meaning": "（容器）密封的，不透氣的；（人群）與世隔絕的，不與外界往來的。"
+            }
+        ]
+    },
+    {
+        "word": "boogie",
+        "definitions": [
+            {
+                "type": "Verb",
+                "meaning": "隨流行音樂跳舞。"
             }
         ]
     }
