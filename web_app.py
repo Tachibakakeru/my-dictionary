@@ -3,8 +3,14 @@ import json
 import os
 import re
 import subprocess
+import webbrowser
+from threading import Timer
 
-# 定義基礎目錄為腳本所在位置 (D:\YiHsiang\CODE\dictionary)
+import queue
+import threading
+import time
+
+# 定義基礎目錄為腳本所在位置
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 app = Flask(__name__, template_folder=os.path.join(BASE_DIR, "templates"))
 
@@ -12,6 +18,66 @@ app = Flask(__name__, template_folder=os.path.join(BASE_DIR, "templates"))
 VOCAB_FILE = os.path.join(BASE_DIR, "dictionary.json")
 PHRASE_FILE = os.path.join(BASE_DIR, "phrases.json")
 SLANG_FILE = os.path.join(BASE_DIR, "slangs.json")
+
+# 安全設定: 建議部署到網路上時修改此 Token
+ACCESS_TOKEN = "Kakeru0913" 
+
+def check_auth(request):
+    """檢查請求是否包含正確的 Token"""
+    token = request.headers.get('X-Access-Token') or request.args.get('token')
+    return token == ACCESS_TOKEN
+
+# 同步任務佇列
+sync_queue = queue.Queue()
+
+def sync_worker():
+    """背景同步執行緒，處理 Git 推送任務"""
+    last_sync_time = 0
+    pending_files = set()
+    
+    while True:
+        try:
+            # 從佇列中取得任務
+            file_path = sync_queue.get()
+            if file_path is None: break # 結束訊號
+            
+            pending_files.add(file_path)
+            
+            # 等待一段時間，合併短時間內的多個更動 (Debounce)
+            # 如果佇列還有東西，就先不處理，繼續收集
+            if not sync_queue.empty():
+                sync_queue.task_done()
+                continue
+                
+            # 延遲一點點時間再執行，確保連續操作被合併
+            time.sleep(2)
+            
+            files_to_sync = list(pending_files)
+            pending_files.clear()
+            
+            for f_path in files_to_sync:
+                filename = os.path.basename(f_path)
+                try:
+                    # Windows 下隱藏控制台視窗的設定
+                    startupinfo = None
+                    if os.name == 'nt':
+                        startupinfo = subprocess.STARTUPINFO()
+                        startupinfo.dwFlags |= subprocess.STARTFLAGS_SWHIDE
+                    
+                    subprocess.run(["git", "add", filename], check=True, cwd=BASE_DIR, startupinfo=startupinfo)
+                    subprocess.run(["git", "commit", "-m", f"Auto-update {filename}"], check=True, cwd=BASE_DIR, startupinfo=startupinfo)
+                    subprocess.run(["git", "push", "origin", "main"], capture_output=True, text=True, cwd=BASE_DIR, startupinfo=startupinfo)
+                    print(f"背景同步完成: {filename}")
+                except Exception as e:
+                    print(f"同步過程發生錯誤 ({filename}): {e}")
+            
+            sync_queue.task_done()
+        except Exception as e:
+            print(f"Worker 異常: {e}")
+            time.sleep(1)
+
+# 啟動背景 Worker
+threading.Thread(target=sync_worker, daemon=True).start()
 
 def format_pos(pos):
     """將詞性轉為字首大寫，並處理常見縮寫"""
@@ -37,28 +103,17 @@ def load_data(file_path):
     except: return []
 
 def save_and_sync(data, file_path):
-    """儲存資料到 JSON 並自動推送到 GitHub"""
+    """儲存資料到 JSON 並發送同步請求到背景佇列"""
     try:
-        # 1. 儲存本地檔案
+        # 1. 儲存本地檔案 (這是即時的)
         with open(file_path, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=4)
         
-        # 2. 執行 Git 指令同步到 GitHub
-        filename = os.path.basename(file_path)
-        subprocess.run(["git", "add", filename], check=True, cwd=BASE_DIR)
-        subprocess.run(["git", "commit", "-m", f"Auto-update {filename} data"], check=True, cwd=BASE_DIR)
-        
-        # 使用 subprocess.PIPE 來捕捉錯誤，避免因為沒權限而卡死
-        result = subprocess.run(["git", "push", "origin", "main"], capture_output=True, text=True, cwd=BASE_DIR)
-        
-        if result.returncode == 0:
-            print(f"{filename} 同步成功！")
-            return True
-        else:
-            print(f"{filename} 同步失敗: {result.stderr}")
-            return False
+        # 2. 將同步請求放入佇列，由背景執行緒處理
+        sync_queue.put(file_path)
+        return True
     except Exception as e:
-        print(f"程式執行異常: {e}")
+        print(f"儲存檔案異常: {e}")
         return False
 
 @app.route('/')
@@ -72,8 +127,18 @@ def get_words():
     words.sort(key=lambda x: x['word'].lower())
     return jsonify(words)
 
+def normalize_meaning(m):
+    """清理意思字串，移除頭尾符號與多餘空白，方便精準比對"""
+    if not m: return ""
+    # 移除頭尾常見標點符號與空白: . 。 , ， ; ； ! ！ ? ？ ( ) [ ] { }
+    import re
+    cleaned = re.sub(r'^[.。，,；;！!？?\s（）\(\)\[\]\{\}]+', '', m.strip())
+    cleaned = re.sub(r'[.。，,；;！!？?\s（）\(\)\[\]\{\}]+$', '', cleaned)
+    return cleaned.lower()
+
 @app.route('/api/words', methods=['POST'])
 def add_word():
+    if not check_auth(request): return jsonify({"error": "Unauthorized"}), 401
     data = request.get_json(silent=True)
     word = data.get('word', '').strip()
     w_type = format_pos(data.get('type', '').strip())
@@ -87,11 +152,19 @@ def add_word():
         for d in existing['definitions']:
             if d['type'].lower() == w_type.lower():
                 import re
+                # 分割符號包含：分號、逗號、斜線、以及它們的全形版本
                 delimiters = r'[;；,，/]'
-                existing_parts = set(p.strip() for p in re.split(delimiters, d['meaning']) if p.strip())
-                new_parts = set(p.strip() for p in re.split(delimiters, meaning) if p.strip())
-                if new_parts.issubset(existing_parts):
-                    return jsonify({"status": "exists", "message": f"字典中已存在：'{word}'"}), 200
+                existing_parts = set(normalize_meaning(p) for p in re.split(delimiters, d['meaning']) if p.strip())
+                new_parts = set(normalize_meaning(p) for p in re.split(delimiters, meaning) if p.strip())
+                
+                # 只要新輸入的任何一個意思，在現有的清單中已經出現過，就跳出提醒
+                overlap = new_parts.intersection(existing_parts)
+                if overlap:
+                    duplicate_str = "、".join(list(overlap))
+                    return jsonify({
+                        "status": "exists", 
+                        "message": f"字典中已存在相同的解釋 ({duplicate_str})：'{word} [{w_type}]'"
+                    }), 200
         existing['definitions'].append(new_defn)
     else:
         words.append({"word": word, "definitions": [new_defn]})
@@ -101,6 +174,7 @@ def add_word():
 
 @app.route('/api/words', methods=['DELETE'])
 def delete_word():
+    if not check_auth(request): return jsonify({"error": "Unauthorized"}), 401
     word_to_delete = request.args.get('word', '').strip()
     words = load_data(VOCAB_FILE)
     new_words = [w for w in words if w['word'].lower() != word_to_delete.lower()]
@@ -111,6 +185,7 @@ def delete_word():
 
 @app.route('/api/words/batch', methods=['DELETE'])
 def delete_words_batch():
+    if not check_auth(request): return jsonify({"error": "Unauthorized"}), 401
     data = request.get_json(silent=True)
     words_to_delete = {w.lower() for w in data.get('words', [])}
     words = load_data(VOCAB_FILE)
@@ -120,6 +195,7 @@ def delete_words_batch():
 
 @app.route('/api/words/update', methods=['PUT'])
 def update_word():
+    if not check_auth(request): return jsonify({"error": "Unauthorized"}), 401
     data = request.get_json(silent=True)
     old_word = data.get('old_word', '').strip()
     words = load_data(VOCAB_FILE)
@@ -149,6 +225,7 @@ def get_phrases():
 
 @app.route('/api/phrases', methods=['POST'])
 def add_phrase():
+    if not check_auth(request): return jsonify({"error": "Unauthorized"}), 401
     data = request.get_json(silent=True)
     phrase = data.get('phrase', '').strip()
     meaning = data.get('meaning', '').strip()
@@ -165,6 +242,7 @@ def add_phrase():
 
 @app.route('/api/phrases', methods=['DELETE'])
 def delete_phrase():
+    if not check_auth(request): return jsonify({"error": "Unauthorized"}), 401
     phrase_to_delete = request.args.get('phrase', '').strip()
     phrases = load_data(PHRASE_FILE)
     new_phrases = [p for p in phrases if p['phrase'].lower() != phrase_to_delete.lower()]
@@ -175,6 +253,7 @@ def delete_phrase():
 
 @app.route('/api/phrases/batch', methods=['DELETE'])
 def delete_phrases_batch():
+    if not check_auth(request): return jsonify({"error": "Unauthorized"}), 401
     data = request.get_json(silent=True)
     phrases_to_delete = {p.lower() for p in data.get('phrases', [])}
     phrases = load_data(PHRASE_FILE)
@@ -184,6 +263,7 @@ def delete_phrases_batch():
 
 @app.route('/api/phrases/update', methods=['PUT'])
 def update_phrase():
+    if not check_auth(request): return jsonify({"error": "Unauthorized"}), 401
     data = request.get_json(silent=True)
     old_phrase = data.get('old_phrase', '').strip()
     phrases = load_data(PHRASE_FILE)
@@ -211,6 +291,7 @@ def get_slangs():
 
 @app.route('/api/slangs', methods=['POST'])
 def add_slang():
+    if not check_auth(request): return jsonify({"error": "Unauthorized"}), 401
     data = request.get_json(silent=True)
     slang = data.get('slang', '').strip()
     meaning = data.get('meaning', '').strip()
@@ -227,6 +308,7 @@ def add_slang():
 
 @app.route('/api/slangs', methods=['DELETE'])
 def delete_slang():
+    if not check_auth(request): return jsonify({"error": "Unauthorized"}), 401
     slang_to_delete = request.args.get('slang', '').strip()
     slangs = load_data(SLANG_FILE)
     new_slangs = [s for s in slangs if s['slang'].lower() != slang_to_delete.lower()]
@@ -237,6 +319,7 @@ def delete_slang():
 
 @app.route('/api/slangs/batch', methods=['DELETE'])
 def delete_slangs_batch():
+    if not check_auth(request): return jsonify({"error": "Unauthorized"}), 401
     data = request.get_json(silent=True)
     slangs_to_delete = {s.lower() for s in data.get('slangs', [])}
     slangs = load_data(SLANG_FILE)
@@ -246,6 +329,7 @@ def delete_slangs_batch():
 
 @app.route('/api/slangs/update', methods=['PUT'])
 def update_slang():
+    if not check_auth(request): return jsonify({"error": "Unauthorized"}), 401
     data = request.get_json(silent=True)
     old_slang = data.get('old_slang', '').strip()
     slangs = load_data(SLANG_FILE)
@@ -264,5 +348,11 @@ def search_slangs():
     results = [s for s in slangs if query in s['slang'].lower() or query in s['meaning'].lower()]
     return jsonify(results)
 
+def open_browser():
+    # 在伺服器環境中不執行開啟瀏覽器
+    pass
+
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    # 本地測試時使用
+    app.run(debug=True, host='0.0.0.0', port=5000)
+

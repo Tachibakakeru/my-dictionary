@@ -51,7 +51,7 @@
 
         .stat-badge { font-size: 0.8rem; font-weight: bold; opacity: 0.8; }
 
-        .container { max-width: 800px; margin: 1.5rem auto; padding: 0 1rem; }
+        .container { max-width: 800px; margin: 1.5rem auto; padding: 0 1rem; padding-bottom: 80px; }
         
         .category-menu { display: grid; grid-template-columns: 1fr; gap: 15px; }
         @media (min-width: 600px) { .category-menu { grid-template-columns: repeat(3, 1fr); } }
@@ -70,10 +70,12 @@
 
         .search-container { position: relative; margin-bottom: 1rem; }
         .input-wrapper { position: relative; width: 100%; display: flex; align-items: center; }
-        input {
-            padding: 12px 45px 12px 15px; border: 2px solid var(--input-border); border-radius: 12px;
+        input, select, textarea {
+            padding: 12px 15px; border: 2px solid var(--input-border); border-radius: 12px;
             font-size: 1rem; background: var(--card-bg); color: var(--text); width: 100%; box-sizing: border-box;
+            outline: none;
         }
+        input:focus { border-color: var(--primary); }
         .btn-clear {
             position: absolute; right: 12px; width: 26px; height: 26px; background: rgba(0,0,0,0.08);
             border: none; border-radius: 50%; display: flex; align-items: center; justify-content: center;
@@ -98,8 +100,18 @@
         .word-card {
             background: var(--card-bg); padding: 1.2rem; border-radius: 12px;
             box-shadow: var(--shadow); border-left: 5px solid var(--primary);
+            position: relative;
         }
-        .word-card h4 { margin: 0 0 0.5rem 0; font-size: 1.3rem; color: var(--primary); }
+        .word-header { display: flex; justify-content: space-between; align-items: flex-start; }
+        .word-card h4 { margin: 0 0 0.5rem 0; font-size: 1.3rem; color: var(--primary); flex: 1; }
+        .card-actions { display: flex; gap: 8px; }
+        .btn-icon { 
+            background: none; border: none; cursor: pointer; font-size: 1.1rem; padding: 5px;
+            border-radius: 50%; transition: 0.2s; color: var(--text); opacity: 0.4;
+        }
+        .btn-icon:hover { opacity: 1; background: rgba(0,0,0,0.05); }
+        .btn-icon.delete:hover { color: var(--danger); }
+
         .definition-row {
             display: flex; gap: 10px; padding: 8px; background: rgba(0,0,0,0.03);
             border-radius: 8px; margin-top: 6px; align-items: baseline;
@@ -115,10 +127,43 @@
             border-bottom: 2.5px solid var(--primary); margin: 1.5rem 0 0.8rem;
         }
 
-        .scroll-top {
-            position: fixed; bottom: 20px; right: 20px; width: 45px; height: 45px;
+        /* Floating Action Button */
+        .fab {
+            position: fixed; bottom: 25px; right: 25px; width: 56px; height: 56px;
             background: var(--primary); color: white; border-radius: 50%;
-            display: none; align-items: center; justify-content: center; font-size: 1.2rem; z-index: 1000;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3); cursor: pointer; z-index: 1000;
+            font-size: 1.5rem; transition: 0.3s;
+        }
+        .fab:active { transform: scale(0.9); }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center;
+            z-index: 2000; padding: 15px; box-sizing: border-box;
+        }
+        .modal-content {
+            background: var(--card-bg); width: 100%; max-width: 500px;
+            padding: 1.5rem; border-radius: 15px; box-shadow: var(--shadow);
+            max-height: 90vh; overflow-y: auto;
+        }
+        .modal-title { margin: 0 0 1rem 0; font-size: 1.5rem; color: var(--primary); }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.9rem; }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 1.5rem; }
+        .btn {
+            padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer;
+            font-weight: bold; transition: 0.2s;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-secondary { background: rgba(0,0,0,0.1); color: var(--text); }
+        [data-theme="dark"] .btn-secondary { background: rgba(255,255,255,0.1); }
+
+        .scroll-top {
+            position: fixed; bottom: 95px; right: 25px; width: 45px; height: 45px;
+            background: var(--secondary); color: white; border-radius: 50%;
+            display: none; align-items: center; justify-content: center; font-size: 1.2rem; z-index: 999;
         }
     </style>
 </head>
@@ -131,6 +176,7 @@
     </div>
     <div class="nav-right">
         <span id="statCount" class="stat-badge"></span>
+        <button onclick="showSection('settings')" id="btnSettings" style="background:none; border:none; font-size:1.2rem; cursor:pointer;">⚙️</button>
         <button onclick="toggleTheme()" id="themeToggle" style="background:none; border:1px solid var(--primary); color:var(--primary); border-radius:15px; padding:3px 8px; font-size:1rem; cursor:pointer; font-weight:bold; display:flex; align-items:center; justify-content:center;">🌙</button>
     </div>
 </nav>
@@ -165,7 +211,6 @@
                 <button class="btn-clear" onclick="document.getElementById('phraseSearchQuery').value=''; updateView('phrase');">✕</button>
             </div>
         </div>
-        <div class="alphabet-nav" id="phraseAlphabetNav"></div>
         <div id="phraseDisplayArea" class="word-list"></div>
     </div>
 
@@ -177,8 +222,63 @@
                 <button class="btn-clear" onclick="document.getElementById('slangSearchQuery').value=''; updateView('slang');">✕</button>
             </div>
         </div>
-        <div class="alphabet-nav" id="slangAlphabetNav"></div>
         <div id="slangDisplayArea" class="word-list"></div>
+    </div>
+
+    <!-- Settings 視圖 -->
+    <div id="settings-section" class="view-section">
+        <div class="word-card">
+            <h4>系統設定</h4>
+            <div class="form-group">
+                <label>存取密鑰 (Access Token)</label>
+                <input type="password" id="tokenInput" placeholder="輸入編輯用的 Token...">
+                <p style="font-size: 0.8rem; opacity: 0.6; margin-top: 5px;">* 若要進行新增/編輯/刪除，請先輸入正確的 Token。</p>
+            </div>
+            <button class="btn btn-primary" onclick="saveSettings()">儲存設定</button>
+        </div>
+    </div>
+</div>
+
+<!-- Floating Action Button -->
+<div class="fab" id="mainFab" onclick="openAddModal()">+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal-content">
+        <h3 class="modal-title" id="modalTitle">新增項目</h3>
+        <div id="vocabForm">
+            <div class="form-group">
+                <label>單字 (Word)</label>
+                <input type="text" id="inputWord">
+            </div>
+            <div id="definitionsContainer">
+                <div class="definition-entry" style="margin-bottom: 10px; padding: 10px; border: 1px dashed var(--primary); border-radius: 8px;">
+                    <div class="form-group">
+                        <label>詞性 (Type)</label>
+                        <input type="text" class="inputType" placeholder="n, v, adj...">
+                    </div>
+                    <div class="form-group">
+                        <label>意思 (Meaning)</label>
+                        <textarea class="inputMeaning" rows="2"></textarea>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-secondary" style="width: 100%; margin-bottom: 10px;" onclick="addDefinitionRow()">+ 增加更多解釋</button>
+        </div>
+        <div id="commonForm" style="display: none;">
+            <div class="form-group">
+                <label id="commonLabel">標題</label>
+                <input type="text" id="inputCommonTitle">
+            </div>
+            <div class="form-group">
+                <label>意思 (Meaning)</label>
+                <textarea id="inputCommonMeaning" rows="3"></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+            <button class="btn btn-primary" onclick="saveItem()">儲存</button>
+        </div>
     </div>
 </div>
 
@@ -189,10 +289,12 @@
     let allPhrases = [];
     let allSlangs = [];
     let activeLetter = null;
-    let currentCategory = 'vocab';
+    let currentCategory = 'home';
+    let editingItem = null;
 
     function initAlphabetNav(navId, category) {
         const nav = document.getElementById(navId);
+        if (!nav) return;
         nav.innerHTML = '';
         'ABCDEFGHIJKLMNOPQRSTUVWXYZ#'.split('').forEach(char => {
             const a = document.createElement('a');
@@ -208,41 +310,45 @@
     }
 
     initAlphabetNav('alphabetNav', 'vocab');
-    initAlphabetNav('phraseAlphabetNav', 'phrase');
-    initAlphabetNav('slangAlphabetNav', 'slang');
 
     function showSection(id) {
+        currentCategory = id;
         document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
         document.getElementById(id + '-section').classList.add('active');
         document.getElementById('btnBack').style.display = (id === 'home') ? 'none' : 'flex';
-        activeLetter = null;
+        document.getElementById('mainFab').style.display = (['vocabulary', 'phrase', 'slang'].includes(id)) ? 'flex' : 'none';
         
+        activeLetter = null;
         if (id === 'home') {
             document.getElementById('statCount').innerText = '';
+        } else if (id === 'settings') {
+            document.getElementById('tokenInput').value = localStorage.getItem('access_token') || '';
+            document.getElementById('statCount').innerText = 'Settings';
         } else {
-            currentCategory = (id === 'vocabulary') ? 'vocab' : id;
-            updateView(currentCategory);
+            updateView(id === 'vocabulary' ? 'vocab' : id);
         }
         window.scrollTo(0,0);
     }
 
     async function initData() {
+        const ts = new Date().getTime();
         try {
             const [vRes, pRes, sRes] = await Promise.all([
-                fetch('dictionary.json'),
-                fetch('phrases.json'),
-                fetch('slangs.json')
+                fetch(`/api/words?t=${ts}`),
+                fetch(`/api/phrases?t=${ts}`),
+                fetch(`/api/slangs?t=${ts}`)
             ]);
             
-            if (vRes.ok) { allWords = await vRes.json(); localStorage.setItem('vocab_cache', JSON.stringify(allWords)); }
-            if (pRes.ok) { allPhrases = await pRes.json(); localStorage.setItem('phrase_cache', JSON.stringify(allPhrases)); }
-            if (sRes.ok) { allSlangs = await sRes.json(); localStorage.setItem('slang_cache', JSON.stringify(allSlangs)); }
+            if (vRes.ok) allWords = await vRes.json();
+            if (pRes.ok) allPhrases = await pRes.json();
+            if (sRes.ok) allSlangs = await sRes.json();
+            
+            if (currentCategory !== 'home' && currentCategory !== 'settings') {
+                updateView(currentCategory === 'vocabulary' ? 'vocab' : currentCategory);
+            }
         } catch (e) {
-            allWords = JSON.parse(localStorage.getItem('vocab_cache') || '[]');
-            allPhrases = JSON.parse(localStorage.getItem('phrase_cache') || '[]');
-            allSlangs = JSON.parse(localStorage.getItem('slang_cache') || '[]');
+            console.error("Fetch error:", e);
         }
-        // 不要自動呼叫 updateView，以免在首頁顯示統計
     }
 
     function updateView(category) {
@@ -251,7 +357,7 @@
         let areaId = '';
         let navId = '';
 
-        if (category === 'vocab') {
+        if (category === 'vocab' || category === 'vocabulary') {
             query = document.getElementById('searchQuery').value.trim().toLowerCase();
             data = allWords;
             areaId = 'displayArea';
@@ -260,20 +366,17 @@
             query = document.getElementById('phraseSearchQuery').value.trim().toLowerCase();
             data = allPhrases;
             areaId = 'phraseDisplayArea';
-            navId = 'phraseAlphabetNav';
         } else if (category === 'slang') {
             query = document.getElementById('slangSearchQuery').value.trim().toLowerCase();
             data = allSlangs;
             areaId = 'slangDisplayArea';
-            navId = 'slangAlphabetNav';
         }
 
         let filtered = data;
 
-        if (activeLetter) {
+        if (activeLetter && category === 'vocab') {
             filtered = filtered.filter(item => {
-                let text = (category === 'vocab' ? item.word : (category === 'phrase' ? item.phrase : item.slang));
-                let char = text[0].toUpperCase();
+                let char = item.word[0].toUpperCase();
                 if (!/[A-Z]/.test(char)) char = '#';
                 return char === activeLetter;
             });
@@ -281,7 +384,7 @@
 
         if (query) {
             filtered = filtered.filter(item => {
-                if (category === 'vocab') {
+                if (category === 'vocab' || category === 'vocabulary') {
                     return item.word.toLowerCase().includes(query) || 
                            item.definitions.some(d => d.meaning.toLowerCase().includes(query));
                 } else if (category === 'phrase') {
@@ -300,19 +403,21 @@
     function render(items, category, areaId, navId) {
         const area = document.getElementById(areaId);
         area.innerHTML = '';
-        document.querySelectorAll(`#${navId} .letter-link`).forEach(l => l.classList.toggle('active', l.innerText === activeLetter));
+        if (navId) {
+            document.querySelectorAll(`#${navId} .letter-link`).forEach(l => l.classList.toggle('active', l.innerText === activeLetter));
+        }
         
         let label = 'Items';
-        if (category === 'vocab') label = 'Vocab';
+        if (category === 'vocab' || category === 'vocabulary') label = 'Vocab';
         else if (category === 'phrase') label = 'Phrases';
+        else if (category === 'slang') label = 'Slangs';
         document.getElementById('statCount').innerText = `${items.length} ${label}`;
 
-        // 分群邏輯 (A-Z Headers)
+        // 分群邏輯
         const groups = {};
         items.forEach(item => {
-            let text = (category === 'vocab' ? item.word : (category === 'phrase' ? item.phrase : item.slang));
-            if (!text) return;
-            let char = text[0].toUpperCase();
+            let text = (item.word || item.phrase || item.slang || '');
+            let char = text[0]?.toUpperCase() || '#';
             if (!/[A-Z]/.test(char)) char = '#';
             if (!groups[char]) groups[char] = [];
             groups[char].push(item);
@@ -325,28 +430,224 @@
             list.className = 'word-list';
             
             groups[char].sort((a, b) => {
-                let textA = (category === 'vocab' ? a.word : (category === 'phrase' ? a.phrase : a.slang)).toLowerCase();
-                let textB = (category === 'vocab' ? b.word : (category === 'phrase' ? b.phrase : b.slang)).toLowerCase();
+                let textA = (a.word || a.phrase || a.slang || '').toLowerCase();
+                let textB = (b.word || b.phrase || b.slang || '').toLowerCase();
                 return textA.localeCompare(textB);
             }).forEach(item => {
                 const card = document.createElement('div');
                 card.className = 'word-card';
-                if (category === 'vocab') {
-                    let defsHtml = '';
+                
+                const header = document.createElement('div');
+                header.className = 'word-header';
+                const title = document.createElement('h4');
+                title.innerText = (item.word || item.phrase || item.slang);
+                header.appendChild(title);
+                
+                const actions = document.createElement('div');
+                actions.className = 'card-actions';
+                
+                const editBtn = document.createElement('button');
+                editBtn.className = 'btn-icon';
+                editBtn.innerHTML = '✏️';
+                editBtn.onclick = () => openEditModal(item, category);
+                
+                const delBtn = document.createElement('button');
+                delBtn.className = 'btn-icon delete';
+                delBtn.innerHTML = '🗑️';
+                delBtn.onclick = () => deleteItem(item, category);
+                
+                actions.appendChild(editBtn);
+                actions.appendChild(delBtn);
+                header.appendChild(actions);
+                card.appendChild(header);
+
+                if (item.definitions) {
                     item.definitions.forEach(d => {
-                        defsHtml += `<div class="definition-row"><span class="pos-badge">${d.type}</span><span>${d.meaning}</span></div>`;
+                        const row = document.createElement('div');
+                        row.className = 'definition-row';
+                        row.innerHTML = `<span class="pos-badge">${d.type}</span><span>${d.meaning}</span>`;
+                        card.appendChild(row);
                     });
-                    card.innerHTML = `<div class="word-header"><h4>${item.word}</h4></div>${defsHtml}`;
-                } else if (category === 'phrase') {
-                    card.innerHTML = `<div class="word-header"><h4>${item.phrase}</h4></div><div class="definition-row"><span>${item.meaning}</span></div>`;
-                } else if (category === 'slang') {
-                    card.innerHTML = `<div class="word-header"><h4>${item.slang}</h4></div><div class="definition-row"><span>${item.meaning}</span></div>`;
+                } else {
+                    const row = document.createElement('div');
+                    row.className = 'definition-row';
+                    row.innerHTML = `<span>${item.meaning}</span>`;
+                    card.appendChild(row);
                 }
                 list.appendChild(card);
             });
             section.appendChild(list);
             area.appendChild(section);
         });
+    }
+
+    // --- Modal Logic ---
+    function openAddModal() {
+        editingItem = null;
+        document.getElementById('modalTitle').innerText = '新增項目';
+        resetForm();
+        document.getElementById('modalOverlay').style.display = 'flex';
+    }
+
+    function openEditModal(item, category) {
+        editingItem = item;
+        document.getElementById('modalTitle').innerText = '編輯項目';
+        resetForm();
+        
+        if (item.word) {
+            document.getElementById('vocabForm').style.display = 'block';
+            document.getElementById('commonForm').style.display = 'none';
+            document.getElementById('inputWord').value = item.word;
+            document.getElementById('definitionsContainer').innerHTML = '';
+            item.definitions.forEach(d => addDefinitionRow(d.type, d.meaning));
+        } else {
+            document.getElementById('vocabForm').style.display = 'none';
+            document.getElementById('commonForm').style.display = 'block';
+            document.getElementById('commonLabel').innerText = item.phrase ? '片語 (Phrase)' : '俚語 (Slang)';
+            document.getElementById('inputCommonTitle').value = (item.phrase || item.slang);
+            document.getElementById('inputCommonMeaning').value = item.meaning;
+        }
+        document.getElementById('modalOverlay').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('modalOverlay').style.display = 'none';
+    }
+
+    function resetForm() {
+        document.getElementById('inputWord').value = '';
+        document.getElementById('inputCommonTitle').value = '';
+        document.getElementById('inputCommonMeaning').value = '';
+        document.getElementById('definitionsContainer').innerHTML = '';
+        
+        if (currentCategory === 'vocabulary') {
+            document.getElementById('vocabForm').style.display = 'block';
+            document.getElementById('commonForm').style.display = 'none';
+            addDefinitionRow();
+        } else {
+            document.getElementById('vocabForm').style.display = 'none';
+            document.getElementById('commonForm').style.display = 'block';
+            document.getElementById('commonLabel').innerText = currentCategory === 'phrase' ? '片語 (Phrase)' : '俚語 (Slang)';
+        }
+    }
+
+    function addDefinitionRow(type = '', meaning = '') {
+        const div = document.createElement('div');
+        div.className = 'definition-entry';
+        div.style = 'margin-bottom: 10px; padding: 10px; border: 1px dashed var(--primary); border-radius: 8px; position: relative;';
+        div.innerHTML = `
+            <button class="btn-icon delete" style="position: absolute; right: 5px; top: 5px;" onclick="this.parentElement.remove()">✕</button>
+            <div class="form-group">
+                <label>詞性 (Type)</label>
+                <input type="text" class="inputType" placeholder="n, v, adj..." value="${type}">
+            </div>
+            <div class="form-group">
+                <label>意思 (Meaning)</label>
+                <textarea class="inputMeaning" rows="2">${meaning}</textarea>
+            </div>
+        `;
+        document.getElementById('definitionsContainer').appendChild(div);
+    }
+
+    async function saveItem() {
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            alert("請先至設定頁面輸入 Access Token！");
+            showSection('settings');
+            closeModal();
+            return;
+        }
+
+        let url = '';
+        let method = editingItem ? 'PUT' : 'POST';
+        let body = {};
+
+        if (currentCategory === 'vocabulary') {
+            url = editingItem ? '/api/words/update' : '/api/words';
+            const word = document.getElementById('inputWord').value.trim();
+            const defs = [];
+            document.querySelectorAll('.definition-entry').forEach(el => {
+                const t = el.querySelector('.inputType').value.trim();
+                const m = el.querySelector('.inputMeaning').value.trim();
+                if (t && m) defs.push({type: t, meaning: m});
+            });
+            if (!word || defs.length === 0) return alert("請填寫完整單字與解釋");
+            
+            if (editingItem) {
+                body = { old_word: editingItem.word, new_word: word, definitions: defs };
+            } else {
+                // 原有的 POST 介面只支援單個詞性，這裡我們改用批次或循環呼叫，或者調整後端
+                // 為了相容現有後端，我們如果有多個解釋，就發送多個 POST
+                for (let d of defs) {
+                    await fetch('/api/words', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-Access-Token': token },
+                        body: JSON.stringify({ word: word, type: d.type, meaning: d.meaning })
+                    });
+                }
+                initData();
+                closeModal();
+                return;
+            }
+        } else if (currentCategory === 'phrase') {
+            url = editingItem ? '/api/phrases/update' : '/api/phrases';
+            const title = document.getElementById('inputCommonTitle').value.trim();
+            const meaning = document.getElementById('inputCommonMeaning').value.trim();
+            if (!title || !meaning) return alert("請填寫完整");
+            body = editingItem ? { old_phrase: editingItem.phrase, new_phrase: title, meaning: meaning } : { phrase: title, meaning: meaning };
+        } else if (currentCategory === 'slang') {
+            url = editingItem ? '/api/slangs/update' : '/api/slangs';
+            const title = document.getElementById('inputCommonTitle').value.trim();
+            const meaning = document.getElementById('inputCommonMeaning').value.trim();
+            if (!title || !meaning) return alert("請填寫完整");
+            body = editingItem ? { old_slang: editingItem.slang, new_slang: title, meaning: meaning } : { slang: title, meaning: meaning };
+        }
+
+        try {
+            const res = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json', 'X-Access-Token': token },
+                body: JSON.stringify(body)
+            });
+            const result = await res.json();
+            if (result.success) {
+                initData();
+                closeModal();
+            } else {
+                alert(result.message || result.error || "儲存失敗");
+            }
+        } catch (e) {
+            alert("請求發生錯誤");
+        }
+    }
+
+    async function deleteItem(item, category) {
+        if (!confirm(`確定要刪除 "${item.word || item.phrase || item.slang}" 嗎？`)) return;
+        
+        const token = localStorage.getItem('access_token');
+        let url = '';
+        if (category === 'vocab' || category === 'vocabulary') url = `/api/words?word=${encodeURIComponent(item.word)}`;
+        else if (category === 'phrase') url = `/api/phrases?phrase=${encodeURIComponent(item.phrase)}`;
+        else if (category === 'slang') url = `/api/slangs?slang=${encodeURIComponent(item.slang)}`;
+
+        try {
+            const res = await fetch(url, {
+                method: 'DELETE',
+                headers: { 'X-Access-Token': token }
+            });
+            if (res.ok) initData();
+            else alert("刪除失敗，請檢查 Token");
+        } catch (e) {
+            alert("刪除時發生錯誤");
+        }
+    }
+
+    // --- Settings & UI ---
+    function saveSettings() {
+        const token = document.getElementById('tokenInput').value;
+        localStorage.setItem('access_token', token);
+        alert("設定已儲存");
+        showSection('home');
     }
 
     function toggleTheme() {
@@ -372,5 +673,7 @@
 
     initData();
 </script>
+</body>
+</html>
 </body>
 </html>

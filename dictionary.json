@@ -112,7 +112,7 @@
         "definitions": [
             {
                 "type": "Adjective",
-                "meaning": "樂於助人的;與人方便的;通融的。"
+                "meaning": "樂於助人的；與人方便的；通融的。"
             }
         ]
     },
@@ -16634,7 +16634,7 @@
         "definitions": [
             {
                 "type": "Adjective",
-                "meaning": "自稱的，自命的。"
+                "meaning": "自稱的、自命的。"
             }
         ]
     },
@@ -16643,7 +16643,7 @@
         "definitions": [
             {
                 "type": "Adjective",
-                "meaning": "固執的，任性的。"
+                "meaning": "固執的、任性的。"
             }
         ]
     },
@@ -20505,6 +20505,33 @@
             {
                 "type": "Noun",
                 "meaning": "性交；性伴侶；費力事；麻煩事；長鼻鸕鷀。"
+            }
+        ]
+    },
+    {
+        "word": "prescience",
+        "definitions": [
+            {
+                "type": "Noun",
+                "meaning": "預知；預知能力。"
+            }
+        ]
+    },
+    {
+        "word": "self-explanatory",
+        "definitions": [
+            {
+                "type": "Adjective",
+                "meaning": "無需解釋的；不證自明的；不言自明的。"
+            }
+        ]
+    },
+    {
+        "word": "veranda",
+        "definitions": [
+            {
+                "type": "Noun",
+                "meaning": "遊廊；陽台；露臺。"
             }
         ]
     }
