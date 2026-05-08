@@ -120,6 +120,33 @@ def save_and_sync(data, file_path):
 def index():
     return render_template('index.html')
 
+import requests
+
+def get_example_sentence(word):
+    """從 Free Dictionary API 抓取例句"""
+    try:
+        url = f"https://api.dictionaryapi.dev/api/v2/entries/en/{word}"
+        response = requests.get(url, timeout=5)
+        if response.status_code == 200:
+            data = response.json()
+            # 遍歷資料找尋第一個可用的例句
+            for entry in data:
+                for meaning in entry.get('meanings', []):
+                    for definition in meaning.get('definitions', []):
+                        example = definition.get('example')
+                        if example:
+                            return example
+    except Exception as e:
+        print(f"抓取例句失敗: {e}")
+    return ""
+
+@app.route('/api/fetch-example', methods=['GET'])
+def fetch_example():
+    word = request.args.get('word', '').strip()
+    if not word: return jsonify({"example": ""})
+    example = get_example_sentence(word)
+    return jsonify({"example": example})
+
 # --- Vocabulary API ---
 @app.route('/api/words', methods=['GET'])
 def get_words():
