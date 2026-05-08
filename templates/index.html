@@ -211,6 +211,7 @@
                 <button class="btn-clear" onclick="document.getElementById('phraseSearchQuery').value=''; updateView('phrase');">✕</button>
             </div>
         </div>
+        <div class="alphabet-nav" id="phraseAlphabetNav"></div>
         <div id="phraseDisplayArea" class="word-list"></div>
     </div>
 
@@ -222,6 +223,7 @@
                 <button class="btn-clear" onclick="document.getElementById('slangSearchQuery').value=''; updateView('slang');">✕</button>
             </div>
         </div>
+        <div class="alphabet-nav" id="slangAlphabetNav"></div>
         <div id="slangDisplayArea" class="word-list"></div>
     </div>
 
@@ -310,6 +312,8 @@
     }
 
     initAlphabetNav('alphabetNav', 'vocab');
+    initAlphabetNav('phraseAlphabetNav', 'phrase');
+    initAlphabetNav('slangAlphabetNav', 'slang');
 
     function showSection(id) {
         currentCategory = id;
@@ -366,17 +370,20 @@
             query = document.getElementById('phraseSearchQuery').value.trim().toLowerCase();
             data = allPhrases;
             areaId = 'phraseDisplayArea';
+            navId = 'phraseAlphabetNav';
         } else if (category === 'slang') {
             query = document.getElementById('slangSearchQuery').value.trim().toLowerCase();
             data = allSlangs;
             areaId = 'slangDisplayArea';
+            navId = 'slangAlphabetNav';
         }
 
         let filtered = data;
 
-        if (activeLetter && category === 'vocab') {
+        if (activeLetter) {
             filtered = filtered.filter(item => {
-                let char = item.word[0].toUpperCase();
+                let text = (item.word || item.phrase || item.slang || '');
+                let char = text[0]?.toUpperCase() || '#';
                 if (!/[A-Z]/.test(char)) char = '#';
                 return char === activeLetter;
             });
@@ -576,14 +583,18 @@
             if (editingItem) {
                 body = { old_word: editingItem.word, new_word: word, definitions: defs };
             } else {
-                // 原有的 POST 介面只支援單個詞性，這裡我們改用批次或循環呼叫，或者調整後端
-                // 為了相容現有後端，我們如果有多個解釋，就發送多個 POST
+                // 原有的 POST 介面只支援單個詞性
                 for (let d of defs) {
-                    await fetch('/api/words', {
+                    const res = await fetch('/api/words', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'X-Access-Token': token },
                         body: JSON.stringify({ word: word, type: d.type, meaning: d.meaning })
                     });
+                    const result = await res.json();
+                    if (result.status === "exists") {
+                        alert(result.message);
+                        return; // 中斷
+                    }
                 }
                 initData();
                 closeModal();
