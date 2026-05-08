@@ -453,6 +453,15 @@
                 const actions = document.createElement('div');
                 actions.className = 'card-actions';
                 
+                const speakBtn = document.createElement('button');
+                speakBtn.className = 'btn-icon';
+                speakBtn.innerHTML = '🔊';
+                speakBtn.title = '發音';
+                speakBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    speak(item.word || item.phrase || item.slang);
+                };
+
                 const editBtn = document.createElement('button');
                 editBtn.className = 'btn-icon';
                 editBtn.innerHTML = '✏️';
@@ -463,6 +472,7 @@
                 delBtn.innerHTML = '🗑️';
                 delBtn.onclick = () => deleteItem(item, category);
                 
+                actions.appendChild(speakBtn);
                 actions.appendChild(editBtn);
                 actions.appendChild(delBtn);
                 header.appendChild(actions);
@@ -681,6 +691,17 @@
     window.onscroll = () => {
         document.getElementById('scrollTopBtn').style.display = window.scrollY > 300 ? 'flex' : 'none';
     };
+
+    function speak(text) {
+        if (!text) return;
+        // 先停止之前的發音
+        window.speechSynthesis.cancel();
+        
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'en-US';
+        utterance.rate = 0.9; // 稍微放慢一點點
+        window.speechSynthesis.speak(utterance);
+    }
 
     initData();
 </script>
