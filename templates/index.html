@@ -508,8 +508,7 @@
                     item.definitions.forEach(d => {
                         const row = document.createElement('div');
                         row.className = 'definition-row';
-                        row.style.flexDirection = 'column';
-                        row.style.alignItems = 'flex-start';
+                        row.style.display = 'block'; // 改為 block 確保分行
 
                         // 拆分意思、例句、翻譯
                         const raw = d.meaning;
@@ -518,31 +517,40 @@
                         const examplePart = exampleAll.split('[Translation]')[0].trim();
                         const translationPart = exampleAll.includes('[Translation]') ? exampleAll.split('[Translation]')[1].trim() : "";
 
-                        let html = `<div style="display:flex; gap:10px; align-items:baseline; margin-bottom: 4px;">
-                                        <span class="pos-badge">${d.type}</span>
-                                        <span style="font-weight: 500;">${meaningPart}</span>
-                                    </div>`;
-                        
+                        let html = `
+                            <!-- 第一行：詞性 + 中文意思 -->
+                            <div style="margin-bottom: 8px; display: flex; align-items: baseline; gap: 8px;">
+                                <span class="pos-badge">${d.type}</span>
+                                <span style="font-weight: bold; font-size: 1.05rem;">${meaningPart}</span>
+                            </div>
+                        `;
+
                         if (examplePart) {
-                            html += `<div style="margin-top:6px; padding-left:12px; border-left:3px solid var(--primary); font-style:italic; font-size:0.95rem; opacity:0.9;">
-                                        <div style="display:flex; align-items:center; gap:5px;">
-                                            <span style="color:var(--primary); font-weight:bold; font-size:0.8rem;">ENG</span>
-                                            <span>${examplePart}</span>
-                                            <button class="btn-icon" style="font-size:0.8rem; opacity:0.6; padding:0 5px;" onclick="speak('${examplePart.replace(/'/g, "\\'")}')">🔊</button>
-                                        </div>`;
-                            if (translationPart) {
-                                html += `<div style="margin-top:2px; font-size:0.85rem; opacity:0.7; font-style: normal;">
-                                            <span style="color:var(--secondary); font-weight:bold; font-size:0.8rem; margin-right:5px;">CHT</span>
-                                            <span>${translationPart}</span>
-                                         </div>`;
-                            }
-                            html += `</div>`;
+                            html += `
+                                <!-- 第二行：英文例句 -->
+                                <div style="margin-bottom: 4px; padding-left: 10px; border-left: 3px solid var(--primary); font-style: italic; color: var(--text); opacity: 0.9;">
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <span style="font-size: 0.95rem;">${examplePart}</span>
+                                        <button class="btn-icon" style="font-size: 0.85rem; opacity: 0.6;" onclick="speak('${examplePart.replace(/'/g, "\\'")}')">🔊</button>
+                                    </div>
+                                </div>
+                            `;
                         }
-                        
+
+                        if (translationPart) {
+                            html += `
+                                <!-- 第三行：例句翻譯 -->
+                                <div style="padding-left: 10px; border-left: 3px solid transparent; font-size: 0.85rem; color: var(--secondary); font-weight: 500;">
+                                    <span>${translationPart}</span>
+                                </div>
+                            `;
+                        }
+
                         row.innerHTML = html;
                         card.appendChild(row);
                     });
-                } else {
+                }
+ else {
                     const row = document.createElement('div');
                     row.className = 'definition-row';
                     row.innerHTML = `<span>${item.meaning}</span>`;
