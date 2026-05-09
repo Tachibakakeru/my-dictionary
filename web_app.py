@@ -123,13 +123,17 @@ def index():
 import requests
 
 def get_example_sentence(word):
-    """從 Free Dictionary API 抓取例句"""
+    """從 Free Dictionary API 抓取例句，並嘗試清理單字格式"""
+    # 移除括號內容，例如 "ambiance(ambience)" -> "ambiance"
+    clean_word = re.sub(r'\(.*\)', '', word).strip()
+    # 移除註解內容，例如 "rear-end (verb)" -> "rear-end"
+    clean_word = clean_word.split(' ')[0].strip()
+    
     try:
-        url = f"https://api.dictionaryapi.dev/api/v2/entries/en/{word}"
+        url = f"https://api.dictionaryapi.dev/api/v2/entries/en/{clean_word}"
         response = requests.get(url, timeout=5)
         if response.status_code == 200:
             data = response.json()
-            # 遍歷資料找尋第一個可用的例句
             for entry in data:
                 for meaning in entry.get('meanings', []):
                     for definition in meaning.get('definitions', []):
@@ -137,15 +141,34 @@ def get_example_sentence(word):
                         if example:
                             return example
     except Exception as e:
-        print(f"抓取例句失敗: {e}")
+        print(f"抓取例句失敗 ({clean_word}): {e}")
+    return ""
+
+def translate_to_chinese(text):
+    """簡單的翻譯介面 (利用 MyMemory 免費 API 或類似工具)"""
+    if not text: return ""
+    try:
+        # 使用 MyMemory API 做簡單翻譯
+        url = f"https://api.mymemory.translated.net/get?q={requests.utils.quote(text)}&langpair=en|zh-TW"
+        res = requests.get(url, timeout=5)
+        if res.status_code == 200:
+            return res.json().get('responseData', {}).get('translatedText', "")
+    except:
+        pass
     return ""
 
 @app.route('/api/fetch-example', methods=['GET'])
 def fetch_example():
     word = request.args.get('word', '').strip()
-    if not word: return jsonify({"example": ""})
+    if not word: return jsonify({"example": "", "translation": ""})
+    
     example = get_example_sentence(word)
-    return jsonify({"example": example})
+    translation = translate_to_chinese(example) if example else ""
+    
+    return jsonify({
+        "example": example,
+        "translation": translation
+    })
 
 # --- Vocabulary API ---
 @app.route('/api/words', methods=['GET'])

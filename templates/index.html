@@ -419,11 +419,15 @@
             const res = await fetch(`/api/fetch-example?word=${encodeURIComponent(word)}`);
             const data = await res.json();
             if (data.example) {
-                // 找到最後一個解釋框，將例句填入意思欄位的下一行
                 const entries = document.querySelectorAll('.definition-entry');
                 const lastMeaning = entries[entries.length - 1].querySelector('.inputMeaning');
                 if (lastMeaning && !lastMeaning.value.includes(data.example)) {
-                    lastMeaning.value += (lastMeaning.value ? '\n\n' : '') + `[Example] ${data.example}`;
+                    let content = lastMeaning.value ? lastMeaning.value + '\n\n' : '';
+                    content += `[Example] ${data.example}`;
+                    if (data.translation) {
+                        content += `\n[Translation] ${data.translation}`;
+                    }
+                    lastMeaning.value = content;
                 }
             }
         } catch (e) { console.error("Fetch example failed", e); }
@@ -443,7 +447,6 @@
         else if (category === 'slang') label = 'Slangs';
         document.getElementById('statCount').innerText = `${items.length} ${label}`;
 
-        // 分群邏輯
         const groups = {};
         items.forEach(item => {
             let text = (item.word || item.phrase || item.slang || '');
@@ -508,22 +511,32 @@
                         row.style.flexDirection = 'column';
                         row.style.alignItems = 'flex-start';
 
-                        // 處理意思與例句分離顯示
-                        const parts = d.meaning.split('[Example]');
-                        const meaningText = parts[0].trim();
-                        const exampleText = parts[1] ? parts[1].trim() : '';
+                        // 拆分意思、例句、翻譯
+                        const raw = d.meaning;
+                        const meaningPart = raw.split('[Example]')[0].trim();
+                        const exampleAll = raw.includes('[Example]') ? raw.split('[Example]')[1] : "";
+                        const examplePart = exampleAll.split('[Translation]')[0].trim();
+                        const translationPart = exampleAll.includes('[Translation]') ? exampleAll.split('[Translation]')[1].trim() : "";
 
-                        let html = `<div style="display:flex; gap:10px; align-items:baseline;">
+                        let html = `<div style="display:flex; gap:10px; align-items:baseline; margin-bottom: 4px;">
                                         <span class="pos-badge">${d.type}</span>
-                                        <span>${meaningText}</span>
+                                        <span style="font-weight: 500;">${meaningPart}</span>
                                     </div>`;
                         
-                        if (exampleText) {
-                            html += `<div style="margin-top:5px; padding-left:10px; border-left:2px solid var(--secondary); font-style:italic; font-size:0.9rem; opacity:0.8;">
-                                        <span style="color:var(--secondary); font-weight:bold; margin-right:5px;">Ex:</span>
-                                        <span>${exampleText}</span>
-                                        <button class="btn-icon" style="font-size:0.8rem; opacity:0.5; padding:0 5px;" onclick="speak('${exampleText.replace(/'/g, "\\'")}')">🔊</button>
-                                     </div>`;
+                        if (examplePart) {
+                            html += `<div style="margin-top:6px; padding-left:12px; border-left:3px solid var(--primary); font-style:italic; font-size:0.95rem; opacity:0.9;">
+                                        <div style="display:flex; align-items:center; gap:5px;">
+                                            <span style="color:var(--primary); font-weight:bold; font-size:0.8rem;">ENG</span>
+                                            <span>${examplePart}</span>
+                                            <button class="btn-icon" style="font-size:0.8rem; opacity:0.6; padding:0 5px;" onclick="speak('${examplePart.replace(/'/g, "\\'")}')">🔊</button>
+                                        </div>`;
+                            if (translationPart) {
+                                html += `<div style="margin-top:2px; font-size:0.85rem; opacity:0.7; font-style: normal;">
+                                            <span style="color:var(--secondary); font-weight:bold; font-size:0.8rem; margin-right:5px;">CHT</span>
+                                            <span>${translationPart}</span>
+                                         </div>`;
+                            }
+                            html += `</div>`;
                         }
                         
                         row.innerHTML = html;
