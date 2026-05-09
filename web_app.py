@@ -122,53 +122,70 @@ def index():
 
 import requests
 
-def get_example_sentence(word):
-    """強化版例句抓取：多重來源備援 (FreeDict -> MyMemory)"""
-    # 1. 基礎清理
+def has_chinese(text):
+    """檢查字串是否包含中文字"""
+    return any('\u4e00' <= char <= '\u9fff' for char in text)
+
+def get_example_with_translation(word):
+    """抓取例句與翻譯：整合 FreeDict 與 MyMemory 來源"""
     clean_word = re.sub(r'\(.*\)', '', word).strip()
     clean_word = clean_word.split(' ')[0].strip()
-    if not clean_word: return ""
+    if not clean_word: return "", ""
 
-    # 策略 A: Free Dictionary API (最精準，含詞性)
+    # --- 策略 A: Free Dictionary API ---
+    example_eng = ""
     try:
         url = f"https://api.dictionaryapi.dev/api/v2/entries/en/{clean_word}"
-        response = requests.get(url, timeout=4)
+        response = requests.get(url, timeout=3)
         if response.status_code == 200:
             data = response.json()
             for entry in data:
                 for meaning in entry.get('meanings', []):
                     for definition in meaning.get('definitions', []):
-                        example = definition.get('example')
-                        if example: return example
+                        if definition.get('example'):
+                            example_eng = definition.get('example')
+                            break
+                    if example_eng: break
+                if example_eng: break
     except: pass
 
-    # 策略 B: MyMemory 翻譯資料庫 (後備來源，內容極豐富但較雜)
-    # 我們搜尋這個單字的翻譯，MyMemory 通常會附帶對應的雙語例句
+    # 如果 Strategy A 抓到了英文，補上翻譯
+    if example_eng:
+        translation_chi = translate_to_chinese(example_eng)
+        return example_eng, translation_chi
+
+    # --- 策略 B: MyMemory 雙語對照 (一次抓完英+中) ---
     try:
         url = f"https://api.mymemory.translated.net/get?q={requests.utils.quote(clean_word)}&langpair=en|zh-TW"
         res = requests.get(url, timeout=4)
         if res.status_code == 200:
-            matches = res.json().get('matches', [])
-            for match in matches:
-                segment = match.get('segment', "")
-                # 過濾：必須包含該單字，且長度適中（避免抓到太短或太長的）
-                if clean_word.lower() in segment.lower() and 15 < len(segment) < 120:
-                    # 避免抓到全是符號或只有單字的
-                    if " " in segment.strip():
-                        return segment
+            data = res.json()
+            # 優先檢查 matches 列表，裡面通常有現成的中英對照例句
+            matches = data.get('matches', [])
+            for m in matches:
+                eng = m.get('segment', "").strip()
+                chi = m.get('translation', "").strip()
+                # 過濾：包含單字、長度適中、且翻譯確實是中文
+                if clean_word.lower() in eng.lower() and 15 < len(eng) < 120 and has_chinese(chi):
+                    return eng, chi
+            
+            # 如果 matches 沒好的，看 responseData (這通常只是單字的翻譯，不一定是例句)
+            trans_text = data.get('responseData', {}).get('translatedText', "")
+            if has_chinese(trans_text) and len(example_eng) > 0:
+                return example_eng, trans_text
     except: pass
 
-    return ""
+    return example_eng, ""
 
 def translate_to_chinese(text):
-    """翻譯介面"""
-    if not text: return ""
+    """獨立翻譯函數"""
+    if not text or has_chinese(text): return text
     try:
         url = f"https://api.mymemory.translated.net/get?q={requests.utils.quote(text)}&langpair=en|zh-TW"
         res = requests.get(url, timeout=4)
         if res.status_code == 200:
-            # 優先找最精準的翻譯
-            return res.json().get('responseData', {}).get('translatedText', "")
+            result = res.json().get('responseData', {}).get('translatedText', "")
+            if has_chinese(result): return result
     except: pass
     return ""
 
@@ -177,8 +194,7 @@ def fetch_example():
     word = request.args.get('word', '').strip()
     if not word: return jsonify({"example": "", "translation": ""})
     
-    example = get_example_sentence(word)
-    translation = translate_to_chinese(example) if example else ""
+    example, translation = get_example_with_translation(word)
     
     return jsonify({
         "example": example,
