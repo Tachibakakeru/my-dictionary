@@ -251,31 +251,31 @@
         <div id="vocabForm">
             <div class="form-group">
                 <label>單字 (Word)</label>
-                <input type="text" id="inputWord" onblur="autoFetchExample()">
+                <div class="input-wrapper">
+                    <input type="text" id="inputWord" onblur="autoFetchExample()">
+                    <button class="btn-clear" onclick="document.getElementById('inputWord').value='';">✕</button>
+                </div>
                 <p id="fetchStatus" style="font-size: 0.7rem; color: var(--primary); margin: 2px 0 0 0; display: none;">正在抓取例句...</p>
             </div>
             <div id="definitionsContainer">
-                <div class="definition-entry" style="margin-bottom: 10px; padding: 10px; border: 1px dashed var(--primary); border-radius: 8px;">
-                    <div class="form-group">
-                        <label>詞性 (Type)</label>
-                        <input type="text" class="inputType" placeholder="n, v, adj...">
-                    </div>
-                    <div class="form-group">
-                        <label>意思 (Meaning)</label>
-                        <textarea class="inputMeaning" rows="2"></textarea>
-                    </div>
-                </div>
+                <!-- 這裡會動態插入解釋區塊 -->
             </div>
             <button class="btn btn-secondary" style="width: 100%; margin-bottom: 10px;" onclick="addDefinitionRow()">+ 增加更多解釋</button>
         </div>
         <div id="commonForm" style="display: none;">
             <div class="form-group">
                 <label id="commonLabel">標題</label>
-                <input type="text" id="inputCommonTitle">
+                <div class="input-wrapper">
+                    <input type="text" id="inputCommonTitle">
+                    <button class="btn-clear" onclick="document.getElementById('inputCommonTitle').value='';">✕</button>
+                </div>
             </div>
             <div class="form-group">
                 <label>意思 (Meaning)</label>
-                <textarea id="inputCommonMeaning" rows="3"></textarea>
+                <div class="input-wrapper">
+                    <textarea id="inputCommonMeaning" rows="3"></textarea>
+                    <button class="btn-clear" style="top: 15px;" onclick="document.getElementById('inputCommonMeaning').value='';">✕</button>
+                </div>
             </div>
         </div>
         <div class="modal-footer">
@@ -613,19 +613,51 @@
         }
     }
 
-    function addDefinitionRow(type = '', meaning = '') {
+    function addDefinitionRow(type = '', meaningRaw = '') {
         const div = document.createElement('div');
         div.className = 'definition-entry';
-        div.style = 'margin-bottom: 10px; padding: 10px; border: 1px dashed var(--primary); border-radius: 8px; position: relative;';
+        div.style = 'margin-bottom: 15px; padding: 15px; border: 1px dashed var(--primary); border-radius: 12px; position: relative; background: rgba(0,0,0,0.02);';
+
+        // 解析原始字串 (相容舊格式)
+        const parts = meaningRaw.split('[Example]');
+        const meaning = parts[0].trim();
+        const exampleAll = parts[1] ? parts[1] : "";
+        const example = exampleAll.split('[Translation]')[0].trim();
+        const translation = exampleAll.includes('[Translation]') ? exampleAll.split('[Translation]')[1].trim() : "";
+
         div.innerHTML = `
-            <button class="btn-icon delete" style="position: absolute; right: 5px; top: 5px;" onclick="this.parentElement.remove()">✕</button>
+            <button class="btn-icon delete" style="position: absolute; right: 8px; top: 8px; opacity: 0.8;" onclick="this.parentElement.remove()">✕</button>
+
             <div class="form-group">
-                <label>詞性 (Type)</label>
-                <input type="text" class="inputType" placeholder="n, v, adj..." value="${type}">
+                <label>詞性 (POS)</label>
+                <div class="input-wrapper">
+                    <input type="text" class="inputType" placeholder="n, v, adj..." value="${type}">
+                    <button class="btn-clear" onclick="this.previousElementSibling.value=''">✕</button>
+                </div>
             </div>
+
             <div class="form-group">
-                <label>意思 (Meaning)</label>
-                <textarea class="inputMeaning" rows="2">${meaning}</textarea>
+                <label>中文意思 (Meaning)</label>
+                <div class="input-wrapper">
+                    <input type="text" class="inputMeaningOnly" placeholder="輸入單字意思..." value="${meaning}">
+                    <button class="btn-clear" onclick="this.previousElementSibling.value=''">✕</button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>英文例句 (Example)</label>
+                <div class="input-wrapper">
+                    <textarea class="inputExampleOnly" rows="2" placeholder="輸入英文例句...">${example}</textarea>
+                    <button class="btn-clear" style="top: 15px;" onclick="this.previousElementSibling.value=''">✕</button>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+                <label>例句翻譯 (Translation)</label>
+                <div class="input-wrapper">
+                    <input type="text" class="inputTranslationOnly" placeholder="輸入例句中文翻譯..." value="${translation}">
+                    <button class="btn-clear" onclick="this.previousElementSibling.value=''">✕</button>
+                </div>
             </div>
         `;
         document.getElementById('definitionsContainer').appendChild(div);
@@ -649,16 +681,24 @@
             const word = document.getElementById('inputWord').value.trim();
             const defs = [];
             document.querySelectorAll('.definition-entry').forEach(el => {
-                const t = el.querySelector('.inputType').value.trim();
-                const m = el.querySelector('.inputMeaning').value.trim();
-                if (t && m) defs.push({type: t, meaning: m});
+                const type = el.querySelector('.inputType').value.trim();
+                const mOnly = el.querySelector('.inputMeaningOnly').value.trim();
+                const eOnly = el.querySelector('.inputExampleOnly').value.trim();
+                const tOnly = el.querySelector('.inputTranslationOnly').value.trim();
+
+                if (type && mOnly) {
+                    // 重新組合成後端儲存格式
+                    let fullMeaning = mOnly;
+                    if (eOnly) fullMeaning += `\n\n[Example] ${eOnly}`;
+                    if (tOnly) fullMeaning += `\n[Translation] ${tOnly}`;
+                    defs.push({type: type, meaning: fullMeaning});
+                }
             });
             if (!word || defs.length === 0) return alert("請填寫完整單字與解釋");
-            
+
             if (editingItem) {
                 body = { old_word: editingItem.word, new_word: word, definitions: defs };
             } else {
-                // 原有的 POST 介面只支援單個詞性
                 for (let d of defs) {
                     const res = await fetch('/api/words', {
                         method: 'POST',
@@ -668,14 +708,15 @@
                     const result = await res.json();
                     if (result.status === "exists") {
                         alert(result.message);
-                        return; // 中斷
+                        return;
                     }
                 }
                 initData();
                 closeModal();
                 return;
             }
-        } else if (currentCategory === 'phrase') {
+        }
+ else if (currentCategory === 'phrase') {
             url = editingItem ? '/api/phrases/update' : '/api/phrases';
             const title = document.getElementById('inputCommonTitle').value.trim();
             const meaning = document.getElementById('inputCommonMeaning').value.trim();
