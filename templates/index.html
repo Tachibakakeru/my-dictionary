@@ -408,30 +408,52 @@
         render(filtered, category, areaId, navId);
     }
 
-    async function autoFetchExample() {
-        const word = document.getElementById('inputWord').value.trim();
-        if (!word || currentCategory !== 'vocabulary' || editingItem) return;
+    async function autoFetchExample(targetEntry = null) {
+        let word = "";
+        let meaningInput, exampleInput, translationInput;
+
+        if (targetEntry) {
+            // 手動按鈕觸發
+            word = document.getElementById('inputWord').value.trim();
+            meaningInput = targetEntry.querySelector('.inputMeaningOnly');
+            exampleInput = targetEntry.querySelector('.inputExampleOnly');
+            translationInput = targetEntry.querySelector('.inputTranslationOnly');
+        } else {
+            // blur 自動觸發 (只針對第一個框)
+            word = document.getElementById('inputWord').value.trim();
+            if (!word || editingItem) return;
+            const firstEntry = document.querySelector('.definition-entry');
+            if (!firstEntry) return;
+            meaningInput = firstEntry.querySelector('.inputMeaningOnly');
+            exampleInput = firstEntry.querySelector('.inputExampleOnly');
+            translationInput = firstEntry.querySelector('.inputTranslationOnly');
+            // 如果已經有內容就不要覆蓋
+            if (exampleInput.value.trim()) return;
+        }
+
+        if (!word) return alert("請先輸入單字");
         
         const statusEl = document.getElementById('fetchStatus');
+        statusEl.innerText = "正在抓取例句...";
         statusEl.style.display = 'block';
         
         try {
             const res = await fetch(`/api/fetch-example?word=${encodeURIComponent(word)}`);
             const data = await res.json();
             if (data.example) {
-                const entries = document.querySelectorAll('.definition-entry');
-                const lastMeaning = entries[entries.length - 1].querySelector('.inputMeaning');
-                if (lastMeaning && !lastMeaning.value.includes(data.example)) {
-                    let content = lastMeaning.value ? lastMeaning.value + '\n\n' : '';
-                    content += `[Example] ${data.example}`;
-                    if (data.translation) {
-                        content += `\n[Translation] ${data.translation}`;
-                    }
-                    lastMeaning.value = content;
-                }
+                if (exampleInput) exampleInput.value = data.example;
+                if (translationInput && data.translation) translationInput.value = data.translation;
+                statusEl.innerText = "抓取成功！";
+            } else {
+                statusEl.innerText = "找不到例句。";
             }
-        } catch (e) { console.error("Fetch example failed", e); }
-        finally { statusEl.style.display = 'none'; }
+        } catch (e) { 
+            console.error("Fetch example failed", e); 
+            statusEl.innerText = "抓取失敗。";
+        }
+        finally { 
+            setTimeout(() => { statusEl.style.display = 'none'; }, 2000);
+        }
     }
 
     function render(items, category, areaId, navId) {
@@ -627,6 +649,11 @@
 
         div.innerHTML = `
             <button class="btn-icon delete" style="position: absolute; right: 8px; top: 8px; opacity: 0.8;" onclick="this.parentElement.remove()">✕</button>
+            
+            <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <label style="font-weight: bold; color: var(--primary);">解釋項目</label>
+                <button class="btn" style="padding: 2px 8px; font-size: 0.75rem; background: var(--secondary); color: white;" onclick="autoFetchExample(this.closest('.definition-entry'))">✨ 自動填入例句</button>
+            </div>
 
             <div class="form-group">
                 <label>詞性 (POS)</label>
